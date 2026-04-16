@@ -19,7 +19,7 @@ api.use(
   '*',
   cors({
     origin: [
-      'https://bkdj5.github.io',
+      'https://imagawadaigo.github.io',
       'https://liff.line.me',
     ],
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

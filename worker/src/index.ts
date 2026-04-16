@@ -30,7 +30,7 @@ app.post('/api/trigger/evening', async (c) => {
 app.post('/api/setup-richmenu', async (c) => {
   const token = c.env.LINE_CHANNEL_ACCESS_TOKEN;
   const LINE_API = 'https://api.line.me/v2/bot';
-  const PORTAL_URL = 'https://bkdj5.github.io/habit-tracker/portal/';
+  const PORTAL_URL = 'https://imagawadaigo.github.io/habit-tracker/portal/';
 
   // 1. 既存リッチメニュー全削除
   try {

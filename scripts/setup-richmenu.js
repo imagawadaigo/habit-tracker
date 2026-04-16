@@ -17,7 +17,7 @@ if (!TOKEN) {
   process.exit(1);
 }
 
-const PORTAL_URL = 'https://bkdj5.github.io/habit-tracker/portal/';
+const PORTAL_URL = 'https://imagawadaigo.github.io/habit-tracker/portal/';
 
 const richMenuBody = {
   size: { width: 2500, height: 1686 },
