@@ -1,5 +1,5 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import type { Env, User, UserProfile, LineEvent, Habit } from '../types';
+import type { Env, User, UserProfile, LineEvent, Habit, LineMessage } from '../types';
 import { replyMessage, textMessage, flexMessage, showLoadingAnimation } from '../lib/line';
 import {
   upsertProfile,
@@ -16,7 +16,7 @@ import {
   saveUserNotes,
 } from '../lib/supabase';
 import { evaluateStage, getHabitStages } from '../lib/stage';
-import { buildHabitListFlex } from '../lib/flex';
+import { buildHabitListFlex, buildLevelUpFlex } from '../lib/flex';
 import { getCoachResponse, extractUserInfo } from '../lib/coach';
 import { calcRecordXp, calcLogXp, grantXp, xpToNextLevel } from '../lib/xp';
 import { onboardingQ1 } from './onboarding-steps';
@@ -424,10 +424,15 @@ async function handleQuickRecord(
 
   const weekRecs = await getRecentRecords(supabase, user.id, 7);
 
-  await replyMessage(env, event.replyToken, [
+  const messages: LineMessage[] = [
     textMessage(`${lines.join('\n')}\n\n${overallMsg}\n${xpLine}`),
-    flexMessage('習慣一覧', buildHabitListFlex(updatedHabits, todayRecords, weekRecs, today, updatedProfile)),
-  ]);
+  ];
+  if (xpResult.leveledUp) {
+    messages.push(flexMessage('LEVEL UP!', buildLevelUpFlex(xpResult.level, xpResult.totalXp, profile?.nickname)));
+  }
+  messages.push(flexMessage('習慣一覧', buildHabitListFlex(updatedHabits, todayRecords, weekRecs, today, updatedProfile)));
+
+  await replyMessage(env, event.replyToken, messages);
 }
 
 // === リセット ===
@@ -561,9 +566,11 @@ async function handleOneLineLog(
       xpLine += ` >> Lv.${xpResult.level} UP!`;
     }
 
-    await replyMessage(env, event.replyToken, [
-      textMessage(`${content}\n\n${xpLine}`),
-    ]);
+    const msgs: LineMessage[] = [textMessage(`${content}\n\n${xpLine}`)];
+    if (xpResult.leveledUp) {
+      msgs.push(flexMessage('LEVEL UP!', buildLevelUpFlex(xpResult.level, xpResult.totalXp)));
+    }
+    await replyMessage(env, event.replyToken, msgs);
   } else {
     await replyMessage(env, event.replyToken, [
       textMessage(`${content}`),

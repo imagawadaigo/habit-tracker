@@ -1,8 +1,8 @@
 import { SupabaseClient } from '@supabase/supabase-js';
-import type { Env, User, UserProfile, LineEvent } from '../types';
+import type { Env, User, UserProfile, LineEvent, LineMessage } from '../types';
 import { replyMessage, textMessage, flexMessage } from '../lib/line';
 import { upsertProfile, getActiveHabits, getTodayRecords, getRecentRecords, recordHabits } from '../lib/supabase';
-import { buildHabitListFlex } from '../lib/flex';
+import { buildHabitListFlex, buildLevelUpFlex } from '../lib/flex';
 import { evaluateStage } from '../lib/stage';
 import { calcRecordXp, grantXp, xpToNextLevel } from '../lib/xp';
 import {
@@ -404,10 +404,12 @@ export async function handlePostback(
 
       const weekRecs = await getRecentRecords(supabase, user.id, 7);
 
-      await replyMessage(env, event.replyToken, [
-        textMessage(msg),
-        flexMessage('習慣一覧', buildHabitListFlex(updatedHabits, todayRecs, weekRecs, today, updatedProfile)),
-      ]);
+      const messages: LineMessage[] = [textMessage(msg)];
+      if (xpResult.leveledUp) {
+        messages.push(flexMessage('LEVEL UP!', buildLevelUpFlex(xpResult.level, xpResult.totalXp, profile?.nickname)));
+      }
+      messages.push(flexMessage('習慣一覧', buildHabitListFlex(updatedHabits, todayRecs, weekRecs, today, updatedProfile)));
+      await replyMessage(env, event.replyToken, messages);
       break;
     }
   }

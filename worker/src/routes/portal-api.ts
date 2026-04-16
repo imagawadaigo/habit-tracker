@@ -223,6 +223,30 @@ api.get('/logs', async (c) => {
 });
 
 // ========================================
+// GET /portal/logs/month?month=YYYY-MM — 月別ログ取得
+// ========================================
+api.get('/logs/month', async (c) => {
+  const { userId, supabase } = ctx(c);
+  const month = c.req.query('month');
+  if (!month) return c.json({ error: 'month required (YYYY-MM)' }, 400);
+
+  const [year, m] = month.split('-').map(Number);
+  const daysInMonth = new Date(year, m, 0).getDate();
+  const start = `${month}-01`;
+  const end = `${month}-${String(daysInMonth).padStart(2, '0')}`;
+
+  const { data } = await supabase
+    .from('daily_logs')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('date', start)
+    .lte('date', end)
+    .order('date', { ascending: false });
+
+  return c.json(data ?? []);
+});
+
+// ========================================
 // POST /portal/logs — 日次ログ保存
 // ========================================
 api.post('/logs', async (c) => {

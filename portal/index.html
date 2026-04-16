@@ -216,6 +216,18 @@
     .log-field { font-size: 13px; margin-bottom: 6px; line-height: 1.5; }
     .log-label { font-weight: 600; color: var(--text-light); font-size: 11px; display: inline-block; min-width: 20px; }
 
+    /* Highlight Timeline */
+    .month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .month-nav button { background: none; border: none; color: var(--primary); font-size: 20px; cursor: pointer; padding: 4px 12px; }
+    .month-nav .month-label { font-size: 15px; font-weight: 700; color: var(--text); }
+    .highlight-timeline { position: relative; padding-left: 20px; }
+    .highlight-day { position: relative; margin-bottom: 16px; }
+    .highlight-day::before { content: ''; position: absolute; left: -16px; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+    .highlight-day::after { content: ''; position: absolute; left: -13px; top: 18px; bottom: -16px; width: 2px; background: var(--border); }
+    .highlight-day:last-child::after { display: none; }
+    .highlight-day-date { font-size: 11px; color: var(--text-light); font-weight: 600; margin-bottom: 2px; }
+    .highlight-day-text { font-size: 13px; line-height: 1.6; white-space: pre-line; }
+
     /* Forms */
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 4px; }
@@ -477,7 +489,19 @@
           <button type="submit" class="btn">保存</button>
         </form>
       </div>
-      <div id="past-logs"></div>
+      <div class="card">
+        <div class="card-title">Highlights</div>
+        <div class="month-nav">
+          <button id="hl-prev">&lt;</button>
+          <span class="month-label" id="hl-month-label"></span>
+          <button id="hl-next">&gt;</button>
+        </div>
+        <div id="highlight-timeline"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">All Logs</div>
+        <div id="past-logs"></div>
+      </div>
     </div>
 
     <!-- Profile -->
@@ -1063,17 +1087,63 @@ document.getElementById('log-form').addEventListener('submit', async (e) => {
   await loadLogs();
 });
 
+// Highlight month navigation
+let hlMonth = new Date();
+hlMonth.setDate(1);
+
+function formatMonth(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+function formatMonthLabel(d) {
+  return `${d.getFullYear()}年${d.getMonth() + 1}月`;
+}
+
+document.getElementById('hl-prev').addEventListener('click', () => {
+  hlMonth.setMonth(hlMonth.getMonth() - 1);
+  loadHighlights();
+});
+document.getElementById('hl-next').addEventListener('click', () => {
+  hlMonth.setMonth(hlMonth.getMonth() + 1);
+  loadHighlights();
+});
+
+async function loadHighlights() {
+  document.getElementById('hl-month-label').textContent = formatMonthLabel(hlMonth);
+  const container = document.getElementById('highlight-timeline');
+  const logs = await api(`/logs/month?month=${formatMonth(hlMonth)}`);
+  const withHL = (logs ?? []).filter(l => l.highlight);
+
+  if (withHL.length === 0) {
+    container.innerHTML = '<div class="loading">この月のハイライトはありません</div>';
+    return;
+  }
+
+  const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+  container.innerHTML = '<div class="highlight-timeline">' + withHL.map(l => {
+    const d = new Date(l.date + 'T00:00:00+09:00');
+    const dayLabel = `${parseInt(l.date.split('-')[2])}日 (${dayNames[d.getDay()]})`;
+    return `<div class="highlight-day">
+      <div class="highlight-day-date">${dayLabel}</div>
+      <div class="highlight-day-text">${esc(l.highlight)}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
 async function loadLogs() {
+  // ハイライトタイムライン
+  await loadHighlights();
+
+  // All Logs (直近14件)
   const logs = await api('/logs?limit=14');
   const container = document.getElementById('past-logs');
 
   if (!logs || logs.length === 0) {
-    container.innerHTML = '<div class="card"><div class="loading">ログがありません</div></div>';
+    container.innerHTML = '<div class="loading">ログがありません</div>';
     return;
   }
 
   container.innerHTML = logs.map(log => `
-    <div class="card log-card">
+    <div class="log-card">
       <div class="log-date">${log.date}</div>
       ${log.focus ? `<div class="log-field"><span class="log-label">Focus</span> ${esc(log.focus)}</div>` : ''}
       ${log.highlight ? `<div class="log-field"><span class="log-label">Highlight</span> ${esc(log.highlight)}</div>` : ''}

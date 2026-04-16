@@ -1,5 +1,5 @@
 import type { Habit, HabitRecord, UserProfile } from '../types';
-import { xpToNextLevel } from './xp';
+import { xpToNextLevel, xpForLevel } from './xp';
 
 /**
  * 習慣一覧のFlex Message contentsを構築する。
@@ -221,6 +221,101 @@ export function buildHabitListFlex(
       ],
       paddingAll: 'sm',
       backgroundColor: '#FFF3E0',
+    },
+  };
+}
+
+/**
+ * レベルアップ時の演出用 Flex Message を構築する。
+ */
+export function buildLevelUpFlex(
+  newLevel: number,
+  totalXp: number,
+  nickname?: string | null
+): Record<string, unknown> {
+  const { current, needed } = xpToNextLevel(totalXp);
+  const barWidth = Math.max(3, Math.round((current / needed) * 100));
+  const name = nickname ?? '';
+
+  return {
+    type: 'bubble',
+    size: 'kilo',
+    styles: {
+      header: { backgroundColor: '#FF6F00' },
+      body: { backgroundColor: '#FFF8E1' },
+    },
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        { type: 'text', text: 'LEVEL UP!', size: 'xl', weight: 'bold', color: '#FFFFFF', align: 'center' },
+      ],
+      paddingAll: 'lg',
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      contents: [
+        {
+          type: 'text',
+          text: `Lv.${newLevel}`,
+          size: '3xl',
+          weight: 'bold',
+          color: '#E65100',
+          align: 'center',
+        },
+        {
+          type: 'text',
+          text: name ? `${name}、レベルアップ!` : 'レベルアップ!',
+          size: 'sm',
+          color: '#5D4037',
+          align: 'center',
+          margin: 'sm',
+        },
+        {
+          type: 'text',
+          text: `${totalXp} XP`,
+          size: 'xs',
+          color: '#8D6E63',
+          align: 'center',
+          margin: 'md',
+        },
+        {
+          type: 'box',
+          layout: 'horizontal',
+          contents: [
+            {
+              type: 'box',
+              layout: 'vertical',
+              contents: [{ type: 'filler' }],
+              backgroundColor: '#FF8A65',
+              flex: barWidth,
+              height: '8px',
+            },
+            {
+              type: 'box',
+              layout: 'vertical',
+              contents: [{ type: 'filler' }],
+              backgroundColor: '#FFE0B2',
+              flex: 100 - barWidth,
+              height: '8px',
+            },
+          ],
+          cornerRadius: '4px',
+          height: '8px',
+          margin: 'md',
+        },
+        {
+          type: 'text',
+          text: `次のレベルまで ${needed - current} XP`,
+          size: 'xxs',
+          color: '#AAAAAA',
+          align: 'center',
+          margin: 'sm',
+        },
+      ],
+      paddingAll: 'xl',
+      spacing: 'none',
     },
   };
 }
