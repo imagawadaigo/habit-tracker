@@ -311,6 +311,41 @@
       line-height: 1;
     }
 
+    /* Level Card */
+    .level-card {
+      background: linear-gradient(135deg, #FF8A65, #E64A19);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      color: white;
+    }
+    .level-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .level-label { font-size: 24px; font-weight: 800; }
+    .level-xp { font-size: 13px; opacity: 0.9; }
+    .xp-bar-bg {
+      height: 8px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .xp-bar-fill {
+      height: 100%;
+      background: white;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    .xp-bar-label {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-top: 4px;
+      text-align: right;
+    }
+
     /* Loading */
     .loading { text-align: center; padding: 40px; color: var(--text-light); font-size: 13px; }
 
@@ -365,6 +400,14 @@
   <div class="content">
     <!-- Dashboard -->
     <div class="section active" id="sec-dashboard">
+      <div class="level-card" id="level-card" style="display:none">
+        <div class="level-header">
+          <span class="level-label" id="level-display">Lv.1</span>
+          <span class="level-xp" id="xp-display">0 XP</span>
+        </div>
+        <div class="xp-bar-bg"><div class="xp-bar-fill" id="xp-bar" style="width:0%"></div></div>
+        <div class="xp-bar-label" id="xp-next-label"></div>
+      </div>
       <div class="stats-row" id="stats-row"></div>
       <div class="card">
         <div class="card-title">Today</div>
@@ -630,20 +673,57 @@ document.querySelectorAll('.nav-item').forEach(btn => {
 });
 
 // =============================================
+// XP / Level helpers (mirror of worker/src/lib/xp.ts)
+// =============================================
+function xpForLevel(level) { return 25 * level * (level - 1); }
+function levelFromXp(totalXp) {
+  let level = 1;
+  while (xpForLevel(level + 1) <= totalXp) level++;
+  return level;
+}
+function xpToNextLevel(totalXp) {
+  const level = levelFromXp(totalXp);
+  const currentLevelXp = xpForLevel(level);
+  const nextLevelXp = xpForLevel(level + 1);
+  const range = nextLevelXp - currentLevelXp;
+  const progress = totalXp - currentLevelXp;
+  return { current: progress, needed: range, progress: range > 0 ? progress / range : 0 };
+}
+
+function renderLevelCard(profile) {
+  const card = document.getElementById('level-card');
+  if (!profile) { card.style.display = 'none'; return; }
+
+  const level = profile.level ?? 1;
+  const totalXp = profile.total_xp ?? 0;
+  const { current, needed, progress } = xpToNextLevel(totalXp);
+
+  card.style.display = 'block';
+  document.getElementById('level-display').textContent = `Lv.${level}`;
+  document.getElementById('xp-display').textContent = `${totalXp} XP`;
+  document.getElementById('xp-bar').style.width = `${Math.max(3, Math.round(progress * 100))}%`;
+  document.getElementById('xp-next-label').textContent = `Next: ${current}/${needed} XP`;
+}
+
+// =============================================
 // Dashboard
 // =============================================
 async function loadDashboard() {
   const today = toDateStr(new Date());
 
-  const [habitsData, recordsData] = await Promise.all([
+  const [habitsData, recordsData, profileData] = await Promise.all([
     api('/habits'),
     api(`/records?date=${today}`),
+    api('/profile'),
   ]);
 
   habits = habitsData;
   todayRecords = {};
   pendingRecords = {};
   (recordsData || []).forEach(r => { todayRecords[r.habit_id] = r.status; });
+
+  // Level card
+  renderLevelCard(profileData?.profile);
 
   // Stats
   const achieved = Object.values(todayRecords).filter(s => s === 'achieved').length;
@@ -737,6 +817,12 @@ document.getElementById('save-records-btn').addEventListener('click', async () =
 
     // 習慣データを更新（ストリーク反映）
     if (result.habits) habits = result.habits;
+
+    // レベルカード再取得
+    try {
+      const profileData = await api('/profile');
+      renderLevelCard(profileData?.profile);
+    } catch {}
 
     renderTodayHabits();
     // Stats再計算
@@ -892,16 +978,18 @@ async function loadTracker() {
 
   // Rows
   for (const h of habits) {
+    const habitCreated = h.created_at ? h.created_at.split('T')[0] : '2000-01-01';
     html += `<div class="tracker-label">${esc(h.name)}</div>`;
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const status = recMap.get(`${h.id}_${dateStr}`);
       const isFuture = new Date(dateStr) > today;
+      const isBeforeCreated = dateStr < habitCreated;
       const isToday = dateStr === todayStr;
       let cls = 'tracker-cell';
       let content = '';
 
-      if (isFuture) { cls += ' future'; }
+      if (isFuture || isBeforeCreated) { cls += ' future'; }
       else if (status === 'achieved') { cls += ' achieved'; content = 'O'; }
       else if (status === 'minimum') { cls += ' minimum'; content = '-'; }
       else { cls += ' missed'; }
@@ -914,15 +1002,23 @@ async function loadTracker() {
   html += '</div>';
   document.getElementById('tracker-grid').innerHTML = html;
 
-  // Rates
-  const pastDays = Math.min(daysInMonth, today.getMonth() === month && today.getFullYear() === year ? today.getDate() : daysInMonth);
+  // Rates (登録日からの経過日数を母数にする)
   document.getElementById('habit-rates').innerHTML = habits.map(h => {
+    const habitCreated = h.created_at ? h.created_at.split('T')[0] : '2000-01-01';
+    const monthStart = `${monthStr}-01`;
+    const effectiveStart = habitCreated > monthStart ? habitCreated : monthStart;
+    const endDate = today.getMonth() === month && today.getFullYear() === year ? todayStr : `${monthStr}-${String(daysInMonth).padStart(2, '0')}`;
+    // effectiveStartからendDateまでの日数
+    const startMs = new Date(effectiveStart + 'T00:00:00').getTime();
+    const endMs = new Date(endDate + 'T00:00:00').getTime();
+    const eligibleDays = effectiveStart <= endDate ? Math.floor((endMs - startMs) / 86400000) + 1 : 0;
+
     const count = (records || []).filter(r => r.habit_id === h.id && (r.status === 'achieved' || r.status === 'minimum')).length;
-    const rate = pastDays > 0 ? Math.round(count / pastDays * 100) : 0;
+    const rate = eligibleDays > 0 ? Math.round(count / eligibleDays * 100) : 0;
     return `<div class="habit-rate-item">
       <div class="habit-rate-info">
         <div class="habit-rate-name">${esc(h.name)}</div>
-        <div class="habit-rate-detail">${count}/${pastDays}日</div>
+        <div class="habit-rate-detail">${count}/${eligibleDays}日</div>
       </div>
       <div class="habit-rate-bar"><div class="habit-rate-fill" style="width:${rate}%"></div></div>
       <div class="habit-rate-pct">${rate}%</div>
@@ -1007,6 +1103,7 @@ async function loadProfile() {
 
   const rows = [
     ['Nickname', profile.nickname ?? '-'],
+    ['Level', `Lv.${profile.level ?? 1} (${profile.total_xp ?? 0} XP)`],
     ['Type', profile.type_code ?? '-'],
     ['Motivation', mLabels[profile.motivation_type] ?? '-'],
     ['Failure', fLabels[profile.failure_type] ?? '-'],
