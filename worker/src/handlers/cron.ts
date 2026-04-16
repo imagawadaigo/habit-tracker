@@ -327,6 +327,9 @@ async function buildEveningMessage(
 
   lines.push('');
   lines.push('番号を送って記録できます。');
+  lines.push('');
+  lines.push('今日のひとことも書いてみない？');
+  lines.push('「ログ 〇〇」で +10 XP');
 
   return [textMessage(lines.join('\n'))];
 }
@@ -566,6 +569,10 @@ function getAllDoneMessage(tone: string, name: string, count: number, mType: str
   }
 
   if (mType === 'M3') base += '\n報告、確かに受け取りました。';
+
+  // ひとことログ促し
+  base += '\n\n今日はどんな1日だった？';
+  base += '\n「ログ 〇〇」で記録すると +10 XP';
   return base;
 }
 
@@ -584,6 +591,9 @@ function getMinimumDoneMessage(tone: string, name: string, achieved: number, min
     base += '\n最低ラインでやり切ったことが、何より価値があります。';
   }
 
+  // ひとことログ促し
+  base += '\n\n今日はどんな1日だった？';
+  base += '\n「ログ 〇〇」で記録すると +10 XP';
   return base;
 }
 

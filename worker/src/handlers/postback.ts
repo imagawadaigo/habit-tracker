@@ -374,7 +374,7 @@ export async function handlePostback(
       await recordHabits(supabase, user.id, today, [{ habitId: habit.id, status }]);
       await evaluateStage(supabase, user.id, habit.id);
 
-      // 更新後のストリーク取得
+      // 更新後のストリーク・記録を取得
       const updatedHabits = await getActiveHabits(supabase, user.id);
       const updated = updatedHabits.find(h => h.id === habit.id);
       const streak = updated?.current_streak ?? 0;
@@ -395,7 +395,19 @@ export async function handlePostback(
         msg += '\n\n全習慣達成!';
       }
 
-      await replyMessage(env, event.replyToken, [textMessage(msg)]);
+      // 更新後のプロフィールを取得してFlex再表示
+      const { data: updatedProfile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      const weekRecs = await getRecentRecords(supabase, user.id, 7);
+
+      await replyMessage(env, event.replyToken, [
+        textMessage(msg),
+        flexMessage('習慣一覧', buildHabitListFlex(updatedHabits, todayRecs, weekRecs, today, updatedProfile)),
+      ]);
       break;
     }
   }

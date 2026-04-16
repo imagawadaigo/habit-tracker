@@ -415,8 +415,18 @@ async function handleQuickRecord(
     xpLine += ` (Lv.${xpResult.level} ${progress.current}/${progress.needed})`;
   }
 
+  // 更新後のプロフィール取得
+  const { data: updatedProfile } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  const weekRecs = await getRecentRecords(supabase, user.id, 7);
+
   await replyMessage(env, event.replyToken, [
     textMessage(`${lines.join('\n')}\n\n${overallMsg}\n${xpLine}`),
+    flexMessage('習慣一覧', buildHabitListFlex(updatedHabits, todayRecords, weekRecs, today, updatedProfile)),
   ]);
 }
 
