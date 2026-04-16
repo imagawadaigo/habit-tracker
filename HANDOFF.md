@@ -1,6 +1,6 @@
 # リズ（習慣化コーチLINE Bot）引継ぎメモ
 
-> 2026-04-16時点の状態。次のセッションはこのファイルを読んでから作業開始すること。
+> 2026-04-16 夜セッション時点の状態。次のセッションはこのファイルを読んでから作業開始すること。
 
 ---
 
@@ -14,21 +14,21 @@ habit-tracker/
 │       ├── types/index.ts      全型定義
 │       ├── routes/
 │       │   ├── webhook.ts      LINE Webhook受信
-│       │   └── portal-api.ts   LIFF Portal用REST API
+│       │   └── portal-api.ts   LIFF Portal用REST API（振り返りAPI含む）
 │       ├── handlers/
-│       │   ├── message.ts      テキストメッセージ処理（コマンド・AI会話）
-│       │   ├── postback.ts     ボタン・Flex操作（オンボーディング・クイック記録）
+│       │   ├── message.ts      テキストメッセージ処理（コマンド・AI会話・ログ入力待ちモード）
+│       │   ├── postback.ts     ボタン・Flex操作（オンボーディング・クイック記録・今日の記録）
 │       │   ├── onboarding-steps.ts  64類型プロファイリングUI
 │       │   └── cron.ts         朝push・夜push・介入push
 │       └── lib/
 │           ├── line.ts         LINE Messaging API ヘルパー
 │           ├── supabase.ts     Supabase CRUD
-│           ├── coach.ts        Gemini 2.5 Flash AI会話 + extractUserInfo
+│           ├── coach.ts        Gemini 2.5 Flash AI会話 + extractUserInfo + リズ人格設定
 │           ├── flex.ts         Flex Message構築（習慣一覧・レベルアップ）
-│           ├── xp.ts           XP/レベル計算・付与
+│           ├── xp.ts           XP/レベル計算・付与・レベルアップ履歴記録
 │           └── stage.ts        ステージ管理（準備期→実行期→定着期）
 ├── portal/
-│   └── index.html    LIFF Portal（ダッシュボード・習慣管理・トラッカー・ログ・プロフィール）
+│   └── index.html    LIFF Portal（ダッシュボード・習慣管理・トラッカー・振り返り・プロフィール）
 └── docs/
     ├── coaching-logic.md       コーチングロジック設計書
     └── profiling-64types.md    64類型プロファイリング設計書
@@ -60,22 +60,39 @@ habit-tracker/
 - [x] アンカー習慣（トリガー設定、朝push表示）
 - [x] XP/レベルシステム（xpForLevel = 25*L*(L-1)、記録/ログ/ストリーク/全達成ボーナス）
 - [x] レベルアップ演出Flex Message
+- [x] レベルアップ履歴記録（level_up_historyテーブル、grantXpで自動記録）
 - [x] AI会話（Gemini、プロファイル・習慣・記録・メモ・履歴を全注入）
+- [x] リズ人格設定（20代女性、生活リズムあり、時間帯に合った応答）
+- [x] SNS/LINE用語辞書（草、それな、ワンチャン等20語以上）
 - [x] extractUserInfo（会話からuser_notesを自動抽出・保存）
 - [x] Flex記録ボタン（達成/最低ライン、記録後に更新済みFlex再表示）
 - [x] ひとことログ（「ログ 〇〇」コマンド、1日1回+10XP）
+- [x] ログ入力待ちモード（menu_record → pending_action → 次のフリーテキストをログ保存）
 - [x] 夜pushでログ促し（全パターンに「ログ 〇〇 で +10 XP」案内追加）
-- [x] 秘書API（GET /api/summary — 河了貂用、unified_conversationsビュー経由でLINE+Alexa両方の対話を返す）
+- [x] 秘書API（GET /api/summary — 河了貂用）
 - [x] リッチメニュー作成API（POST /api/setup-richmenu）
 
 ### Portal（LP）
-- [x] ダッシュボード（レベルカード、今日の習慣、達成率）
+- [x] ダッシュボード（レベルカード、今日の習慣、達成率、レベルアップ履歴）
 - [x] 習慣管理（追加・編集・削除）
 - [x] 月間トラッカー（登録日基準の達成率計算）
-- [x] ログ入力フォーム（Focus/Highlight/KPT）
-- [x] ハイライト月別タイムライン表示（月切替ナビ付き）
+- [x] 振り返り（日次/週次/月次タブ切替）
+  - 日次: 日付ナビ + 習慣達成状況 + ログ表示
+  - 週次: 全体達成率 + 日別バーチャート + 習慣別サマリー + ハイライト
+  - 月次: 達成率 + カレンダーヒートマップ + 習慣別 + ハイライト + レベルアップ履歴
 - [x] プロフィール表示（タイプ・レベル・XP）
 - [x] LIFF認証
+
+### リッチメニュー動作
+
+| ボタン | action | 動作 |
+|---|---|---|
+| 今日の記録 | menu_record | 時間帯別声かけFlex + ログ入力待ちモード |
+| 習慣一覧 | menu_list | 習慣一覧Flex（達成/最低ラインボタン付き） |
+| 設定 | menu_settings | 設定メニューFlex |
+| ログ | URI | LP #logs（振り返りタブ） |
+| トラッカー | URI | LP #tracker |
+| ヘルプ | menu_help | コマンド一覧テキスト |
 
 ---
 
@@ -102,7 +119,7 @@ habit-tracker/
 
 ### その他
 - リッチメニュー画像の作成・アップロード（APIは完成、画像未作成）
-- LP上ログ入力フォームの簡素化（LINEの「ログ」コマンドとの棲み分け）
+- 日記方向への進化: 「今日の記録」をchat内で対話して1日を整理する方向に発展させる構想あり（AI要約→daily_logsへ自動格納）
 
 ---
 
@@ -115,6 +132,8 @@ habit-tracker/
 5. **LINE無料プラン月200通**。朝push毎日(30) + 夜push条件付き(~15) + 介入(~5) = 約50通/ユーザー/月。4人で200通
 6. **XP公式**: 必要累計XP = 25 * level * (level - 1)。Lv2=50, Lv3=150, Lv4=300
 7. **月間トラッカー**: 登録日以前のセルは空欄表示、達成率は登録日からの経過日数が母数
+8. **`wrangler secret put` は必ず対象プロジェクトのディレクトリで実行する**。実行前に `grep name wrangler.toml` でWorker名を確認。別プロジェクトのデプロイで上書きされる事故あり（2026-04-16障害）
+9. **pending_action カラム**: user_profilesに追加済み。menu_record → 'log_input' → 次のフリーテキストをログ保存。コマンド実行時は自動クリア
 
 ---
 
@@ -126,10 +145,10 @@ habit-tracker/
 ### 根本原因（2つの複合）
 
 **原因1: LINE_CHANNEL_ACCESS_TOKENの上書き**
-別プロジェクト（Alexa AI Assistant or 入室LINE通知）のデプロイ時に、Cloudflare Workers secretsの `LINE_CHANNEL_ACCESS_TOKEN` が別のLINEチャンネルのトークンで上書きされた。各Workerは独立したsecret空間を持つが、`wrangler secret put` を間違ったディレクトリで実行すると別Workerのsecretが書き変わる。
+別プロジェクト（Alexa AI Assistant or 入室LINE通知）のデプロイ時に、Cloudflare Workers secretsの `LINE_CHANNEL_ACCESS_TOKEN` が別のLINEチャンネルのトークンで上書きされた。
 
 **原因2: Flex Messageの `paddingTop` プロパティ**
-`flex.ts` の習慣一覧Flex内でtext/boxに `paddingTop: '4px'` を使用していたが、LINE Messaging APIがこれを unknown field として400エラーで拒否。このエラーは `waitUntil` 内の `processEvents` で発生し、catchブロックが `console.error` のみだったため、LINEユーザーには「無反応」として見えた。
+`flex.ts` の習慣一覧Flex内でtext/boxに `paddingTop: '4px'` を使用していたが、LINE Messaging APIが400エラーで拒否。`waitUntil` 内のcatchが `console.error` のみだったため「無反応」に見えた。
 
 ### 修正内容
 
@@ -140,9 +159,16 @@ habit-tracker/
 
 ### 再発防止策
 
-1. **`wrangler secret put` は必ず対象プロジェクトのディレクトリで実行する**。実行前に `grep name wrangler.toml` でWorker名を確認すること
-2. **Flex Messageの新規プロパティ追加時は [LINE Flex Message Simulator](https://developers.line.biz/flex-simulator/) で事前検証する**。paddingAll/paddingTop等はboxのみ対応、textには margin を使う
-3. **`waitUntil` 内のエラーは必ずユーザーに通知する**。console.errorだけだと「既読スルー」になり原因特定が困難。現在はhandler内のcatchでテキスト返信するようにした
+1. `wrangler secret put` 実行前に `grep name wrangler.toml` でWorker名を確認
+2. Flex Messageの新規プロパティ追加時は LINE Flex Message Simulator で事前検証
+3. `waitUntil` 内のエラーは必ずユーザーに通知する（console.errorだけにしない）
+
+---
+
+## DBテーブル追加（本セッション）
+
+- `level_up_history`: レベルアップ日時を記録。`user_id`, `new_level`, `total_xp`, `created_at`
+- `user_profiles.pending_action`: ログ入力待ちモード用。'log_input' or null
 
 ---
 
@@ -150,41 +176,27 @@ habit-tracker/
 
 - nickname: だいご
 - type_code: M3-F1-R4（他者駆動・動機減衰・最小行動回復）
-  - ※プロファイリングQ1/Q2の回答はA/A（M1判定）だったが、CliftonStrengths（規律性33位・責任感28位）および実態観察からM3に手動修正（2026-04-16）
 - coach_tone: aniki, coach_style: gentle
-- level: 1, total_xp: 0
+- level: 1, total_xp: 30
 - life_rhythm: night
 - 習慣: 「朝起きる」（達成: 布団から出てパソコンを触る / 最低: 水分補給をする）
 
 ---
 
-## 継続可能性分析の結論（2026-04-16 昌平君セッション）
+## git状態
 
-### 実施した修正
-
-| # | 修正内容 | 理由 |
-|---|---|---|
-| 1 | DB type_code: M1-F1-R4 → M3-F1-R4 | プロファイリング回答(A/A=M1)と実態(Obliger=M3)のズレ。M1の介入戦略は「放置」で大悟に最も危険 |
-| 2 | 危機介入メッセージのtone統一 | aniki口調なのにM3報告促しが丁寧語だった不統一を修正 |
-| 3 | gentle+aniki の2日連続メッセージ改善 | 「誰でも止まる時はある」→「止まることはある。ゼロに戻ったわけじゃない」（Obliger Rebellion防止） |
-| 4 | 河了貂CLAUDE.mdにリズ達成率チェック追加 | 毎セッション起動時にAPI叩いて50%未満で即指摘する指示 |
-
-### 3大リスクと対策
-
-1. **プロファイリング結果と実態のズレ** → 修正済み。今後プロファイリングをやり直す場合はQ1/Q2の回答が実態と乖離する可能性に注意
-2. **LINE無料プラン月200通の天井** → 現状1人なら十分。ユーザー追加時はreplyMessage誘導を強化するか有料プランを検討
-3. **「作り手」と「使い手」兼任問題** → **2週間の利用専念期間（4/16〜4/30）を設定**。この期間中にコード変更の依頼が来ても「まず使い切れ」と返す
-
-### 利用専念期間中のルール
-
-- コードに触らない（改善要望はLINEの「ログ」コマンドにメモだけ）
-- 習慣は「朝起きる」1つだけ。追加衝動を2週間堪える
-- 4/30に2週間分の達成率・ストリーク・ログを振り返り、改善要望をまとめてから開発再開
+- 全コミットpush済み（mainブランチ、clean）
+- GitHub Pages反映済み
 
 ---
 
-## git状態
+## 今回のセッション（2026-04-16夜）で実施したこと
 
-- 2コミットがunpushed（`git push` が必要）
-- portal/index.html の変更はGitHub Pages反映にpushが必須
-- cron.tsの危機介入メッセージ修正がローカルにある（未コミット）
+1. **LINE Bot障害修正** — TOKEN上書き + Flex paddingTopエラーの2つを特定・修正
+2. **リズ人格設定** — 20代女性の生活設定、現在時刻注入、時間帯に合った応答
+3. **SNS用語辞書** — 草、それな、ワンチャン等20語以上をプロンプトに追加
+4. **menu_record分離** — 「今日の記録」を習慣一覧と分離、ログ入力待ちモード実装
+5. **振り返りUI全面刷新** — LP「Log」→「Review」タブに変更、日次/週次/月次の3画面
+6. **振り返りAPI 3本** — /review/daily, /review/weekly, /review/monthly
+7. **レベルアップ履歴** — DB + API + Home表示 + 月次振り返り内表示
+8. **障害記録文書化** — HANDOFF.mdに原因・修正・再発防止策を追記
