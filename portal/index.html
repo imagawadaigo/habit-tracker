@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Riz</title>
+  <style>
+    :root {
+      --primary: #FF8A65;
+      --primary-light: #FFAB91;
+      --primary-dark: #E64A19;
+      --bg: #FFF8F0;
+      --card: #FFFFFF;
+      --text: #333333;
+      --text-light: #999999;
+      --border: #F0E8E0;
+      --achieved: #FF8A65;
+      --minimum: #FFCC80;
+      --missed: #E0E0E0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      max-width: 480px;
+      margin: 0 auto;
+      padding-bottom: 72px;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #FF8A65, #E64A19);
+      color: white;
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+    .header .subtitle { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+    /* Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      z-index: 100;
+    }
+    .nav-item {
+      flex: 1;
+      padding: 8px 0 6px;
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: color 0.15s;
+      border: none;
+      background: none;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-icon {
+      display: block;
+      width: 22px;
+      height: 22px;
+      margin: 0 auto 2px;
+    }
+
+    /* Content */
+    .content { padding: 16px; }
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--primary-dark);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Stats */
+    .stats-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .stat-box {
+      flex: 1;
+      background: var(--card);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .stat-number { font-size: 24px; font-weight: 800; color: var(--primary); }
+    .stat-label { font-size: 10px; color: var(--text-light); margin-top: 2px; }
+
+    /* Habit Record Buttons */
+    .habit-record-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .habit-record-item:last-child { border-bottom: none; }
+    .habit-record-info { flex: 1; min-width: 0; }
+    .habit-record-name { font-size: 14px; font-weight: 600; }
+    .habit-record-detail { font-size: 11px; color: var(--text-light); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .habit-record-streak { font-size: 11px; color: var(--primary); margin-top: 1px; }
+    .record-btns { display: flex; gap: 6px; margin-left: 8px; flex-shrink: 0; }
+    .record-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: var(--card);
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-light);
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .record-btn:active { transform: scale(0.95); }
+    .record-btn.achieved { background: var(--achieved); color: white; border-color: var(--achieved); }
+    .record-btn.minimum { background: var(--minimum); color: white; border-color: var(--minimum); }
+    .record-btn.missed { background: var(--missed); color: var(--text-light); border-color: var(--missed); }
+
+    /* Habit Management */
+    .habit-manage-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .habit-manage-item:last-child { border-bottom: none; }
+    .habit-manage-info { flex: 1; }
+    .habit-manage-name { font-size: 14px; font-weight: 600; }
+    .habit-manage-meta { font-size: 11px; color: var(--text-light); margin-top: 2px; }
+    .habit-manage-actions { display: flex; gap: 6px; }
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-light);
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .icon-btn.danger:hover { border-color: #EF5350; color: #EF5350; }
+
+    /* Monthly Tracker */
+    .tracker-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tracker-grid {
+      display: grid;
+      gap: 2px;
+      font-size: 11px;
+    }
+    .tracker-header { font-weight: 600; color: var(--text-light); padding: 4px 2px; text-align: center; }
+    .tracker-label { font-weight: 600; padding: 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tracker-cell {
+      width: 26px; height: 26px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .tracker-cell.achieved { background: var(--achieved); color: white; }
+    .tracker-cell.minimum { background: var(--minimum); color: white; }
+    .tracker-cell.missed { background: var(--missed); }
+    .tracker-cell.future { background: transparent; border: 1px dashed var(--border); }
+    .tracker-cell.today { outline: 2px solid var(--primary-dark); outline-offset: 1px; }
+
+    /* Habit Rate */
+    .habit-rate-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .habit-rate-item:last-child { border-bottom: none; }
+    .habit-rate-info { flex: 1; }
+    .habit-rate-name { font-size: 13px; font-weight: 600; }
+    .habit-rate-detail { font-size: 11px; color: var(--text-light); }
+    .habit-rate-bar { width: 60px; height: 6px; background: var(--border); border-radius: 3px; margin-left: 8px; overflow: hidden; }
+    .habit-rate-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.3s; }
+    .habit-rate-pct { font-size: 13px; font-weight: 700; color: var(--primary); width: 40px; text-align: right; }
+
+    /* Daily Log */
+    .log-card { margin-bottom: 12px; }
+    .log-date { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
+    .log-field { font-size: 13px; margin-bottom: 6px; line-height: 1.5; }
+    .log-label { font-weight: 600; color: var(--text-light); font-size: 11px; display: inline-block; min-width: 20px; }
+
+    /* Forms */
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-light); margin-bottom: 4px; }
+    .form-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      background: var(--card);
+      color: var(--text);
+      -webkit-appearance: none;
+    }
+    .form-input:focus { outline: none; border-color: var(--primary); }
+    textarea.form-input { resize: vertical; min-height: 60px; font-family: inherit; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:active { opacity: 0.8; }
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 1.5px solid var(--primary);
+    }
+    .btn-sm { padding: 8px 16px; font-size: 13px; width: auto; display: inline-block; }
+
+    /* Month Selector */
+    .month-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .month-nav button {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: var(--primary);
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+    .month-nav .current-month { font-size: 16px; font-weight: 700; }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--card);
+      border-radius: 16px 16px 0 0;
+      padding: 24px 20px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: slideUp 0.2s ease-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: var(--text-light);
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    /* Loading */
+    .loading { text-align: center; padding: 40px; color: var(--text-light); font-size: 13px; }
+
+    /* Auth screen */
+    .auth-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80vh;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    .auth-logo {
+      width: 80px;
+      height: 80px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+    .auth-logo svg { width: 48px; height: 48px; }
+    .auth-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .auth-desc { font-size: 14px; color: var(--text-light); margin-bottom: 32px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-logo">
+    <svg viewBox="0 0 640 640" fill="none">
+      <circle cx="320" cy="310" r="220" fill="#FFF8F0"/>
+      <ellipse cx="250" cy="280" rx="22" ry="26" fill="#4A3728"/>
+      <ellipse cx="390" cy="280" rx="22" ry="26" fill="#4A3728"/>
+      <path d="M265 360Q320 400 375 360" stroke="#4A3728" stroke-width="8" fill="none" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div class="auth-title">Riz</div>
+  <div class="auth-desc" id="auth-message">読み込み中...</div>
+</div>
+
+<!-- Main App (hidden until authenticated) -->
+<div id="main-app" style="display:none">
+  <div class="header">
+    <h1>Riz</h1>
+    <div class="subtitle" id="header-subtitle"></div>
+  </div>
+
+  <div class="content">
+    <!-- Dashboard -->
+    <div class="section active" id="sec-dashboard">
+      <div class="stats-row" id="stats-row"></div>
+      <div class="card">
+        <div class="card-title">Today</div>
+        <div id="today-habits"><div class="loading">読み込み中...</div></div>
+        <div style="margin-top:12px; text-align:center">
+          <button class="btn" id="save-records-btn" style="display:none">記録を保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Habits Management -->
+    <div class="section" id="sec-habits">
+      <div class="card">
+        <div class="card-title">Habits</div>
+        <div id="habits-list"><div class="loading">読み込み中...</div></div>
+      </div>
+      <button class="btn" id="add-habit-btn">習慣を追加</button>
+    </div>
+
+    <!-- Monthly Tracker -->
+    <div class="section" id="sec-tracker">
+      <div class="month-nav">
+        <button id="prev-month">&lt;</button>
+        <span class="current-month" id="current-month"></span>
+        <button id="next-month">&gt;</button>
+      </div>
+      <div class="card">
+        <div class="tracker-scroll">
+          <div id="tracker-grid"><div class="loading">読み込み中...</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Achievement Rate</div>
+        <div id="habit-rates"></div>
+      </div>
+    </div>
+
+    <!-- Daily Logs -->
+    <div class="section" id="sec-logs">
+      <div class="card">
+        <div class="card-title">New Entry</div>
+        <form id="log-form">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" class="form-input" id="log-date" required>
+          </div>
+          <div class="form-group">
+            <label>Focus (今日の焦点)</label>
+            <input type="text" class="form-input" id="log-focus" placeholder="今日最も注力すること">
+          </div>
+          <div class="form-group">
+            <label>Highlight (今日のハイライト)</label>
+            <input type="text" class="form-input" id="log-highlight" placeholder="印象に残った出来事">
+          </div>
+          <div class="form-group">
+            <label>Keep (続けること)</label>
+            <textarea class="form-input" id="log-keep" rows="2" placeholder="うまくいったこと、続けたいこと"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Problem (課題)</label>
+            <textarea class="form-input" id="log-problem" rows="2" placeholder="うまくいかなかったこと"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Try (次に試すこと)</label>
+            <textarea class="form-input" id="log-try" rows="2" placeholder="改善のためにやってみること"></textarea>
+          </div>
+          <button type="submit" class="btn">保存</button>
+        </form>
+      </div>
+      <div id="past-logs"></div>
+    </div>
+
+    <!-- Profile -->
+    <div class="section" id="sec-profile">
+      <div class="card">
+        <div class="card-title">Profile</div>
+        <div id="profile-info"><div class="loading">読み込み中...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <button class="nav-item active" data-tab="dashboard">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      Home
+    </button>
+    <button class="nav-item" data-tab="habits">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>
+      Habits
+    </button>
+    <button class="nav-item" data-tab="tracker">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="14" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1"/></svg>
+      Tracker
+    </button>
+    <button class="nav-item" data-tab="logs">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      Log
+    </button>
+    <button class="nav-item" data-tab="profile">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profile
+    </button>
+  </div>
+</div>
+
+<!-- Add/Edit Habit Modal -->
+<div class="modal-overlay" id="habit-modal">
+  <div class="modal">
+    <button class="modal-close" id="habit-modal-close">&times;</button>
+    <div class="modal-title" id="habit-modal-title">習慣を追加</div>
+    <form id="habit-form">
+      <input type="hidden" id="habit-edit-id">
+      <div class="form-group">
+        <label>習慣名</label>
+        <input type="text" class="form-input" id="habit-name" placeholder="例: 朝の散歩" required>
+      </div>
+      <div class="form-group">
+        <label>カテゴリ</label>
+        <select class="form-input" id="habit-category">
+          <option value="action">行動習慣</option>
+          <option value="lifestyle">生活習慣</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>達成ライン</label>
+        <input type="text" class="form-input" id="habit-achievement" placeholder="例: 30分以上歩く">
+      </div>
+      <div class="form-group">
+        <label>最低ライン</label>
+        <input type="text" class="form-input" id="habit-minimum" placeholder="例: 5分でもOK">
+      </div>
+      <div class="form-group">
+        <label>アンカー習慣 (トリガー)</label>
+        <input type="text" class="form-input" id="habit-anchor" placeholder="例: コーヒーを淹れた後">
+      </div>
+      <button type="submit" class="btn" id="habit-submit-btn">追加</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+// =============================================
+// Config
+// =============================================
+const API_BASE = 'https://riz-habit-bot.wishdaigo1458.workers.dev/portal';
+// LIFF ID（LINE Developers Consoleで発行後に設定する。未設定時はfallback）
+const LIFF_ID = '';
+
+let lineUserId = null;
+let habits = [];
+let todayRecords = {};
+let pendingRecords = {};
+let viewMonth = new Date();
+
+// =============================================
+// API Helper
+// =============================================
+async function api(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Line-UserId': lineUserId,
+      ...(options.headers || {}),
+    },
+  });
+  return res.json();
+}
+
+// =============================================
+// Auth / Init
+// =============================================
+async function init() {
+  const authMsg = document.getElementById('auth-message');
+
+  // LIFF認証
+  if (LIFF_ID) {
+    try {
+      authMsg.textContent = 'LINE認証中...';
+      await liff.init({ liffId: LIFF_ID });
+
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+
+      const profile = await liff.getProfile();
+      lineUserId = profile.userId;
+    } catch (e) {
+      authMsg.textContent = 'LIFF初期化に失敗しました: ' + e.message;
+      return;
+    }
+  } else {
+    // LIFF未設定時: URLパラメータからLINE User IDを取得（開発用）
+    const params = new URLSearchParams(location.search);
+    lineUserId = params.get('uid');
+
+    if (!lineUserId) {
+      // Supabase直接取得（1人用fallback）
+      try {
+        const res = await fetch('https://swmvxrzqhujcpdbvdzdf.supabase.co/rest/v1/users?onboarding_completed=eq.true&limit=1', {
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3bXZ4cnpxaHVqY3BkYnZkemRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNDk1MTIsImV4cCI6MjA5MTgyNTUxMn0.K1-5c9u2VNGwuQJthcBjVfxssjkuiszyZpwKbeVBJ0w',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3bXZ4cnpxaHVqY3BkYnZkemRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNDk1MTIsImV4cCI6MjA5MTgyNTUxMn0.K1-5c9u2VNGwuQJthcBjVfxssjkuiszyZpwKbeVBJ0w',
+          }
+        });
+        const users = await res.json();
+        if (users.length > 0) {
+          lineUserId = users[0].line_user_id;
+        }
+      } catch {}
+    }
+
+    if (!lineUserId) {
+      authMsg.textContent = 'LINEから開いてください';
+      return;
+    }
+  }
+
+  // 認証成功 - メインアプリを表示
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+
+  // プロファイル読み込み
+  try {
+    const profileData = await api('/profile');
+    const nickname = profileData.profile?.nickname ?? 'User';
+    const typeCode = profileData.profile?.type_code ?? '';
+    document.getElementById('header-subtitle').textContent = typeCode ? `${nickname} | ${typeCode}` : nickname;
+  } catch {}
+
+  // ハッシュでタブ切り替え
+  const hash = location.hash.replace('#', '');
+  if (hash) {
+    switchTab(hash);
+  }
+
+  await loadDashboard();
+}
+
+// =============================================
+// Tab Navigation
+// =============================================
+function switchTab(tab) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+  const navItem = document.querySelector(`.nav-item[data-tab="${tab}"]`);
+  const section = document.getElementById(`sec-${tab}`);
+  if (navItem) navItem.classList.add('active');
+  if (section) section.classList.add('active');
+
+  if (tab === 'habits') loadHabits();
+  if (tab === 'tracker') loadTracker();
+  if (tab === 'logs') loadLogs();
+  if (tab === 'profile') loadProfile();
+}
+
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// =============================================
+// Dashboard
+// =============================================
+async function loadDashboard() {
+  const today = toDateStr(new Date());
+
+  const [habitsData, recordsData] = await Promise.all([
+    api('/habits'),
+    api(`/records?date=${today}`),
+  ]);
+
+  habits = habitsData;
+  todayRecords = {};
+  pendingRecords = {};
+  (recordsData || []).forEach(r => { todayRecords[r.habit_id] = r.status; });
+
+  // Stats
+  const achieved = Object.values(todayRecords).filter(s => s === 'achieved').length;
+  const minimum = Object.values(todayRecords).filter(s => s === 'minimum').length;
+  const total = habits.length;
+  const maxStreak = habits.reduce((max, h) => Math.max(max, h.current_streak || 0), 0);
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-box"><div class="stat-number">${achieved + minimum}/${total}</div><div class="stat-label">Today</div></div>
+    <div class="stat-box"><div class="stat-number">${maxStreak}</div><div class="stat-label">Best Streak</div></div>
+    <div class="stat-box"><div class="stat-number">${total}</div><div class="stat-label">Habits</div></div>
+  `;
+
+  renderTodayHabits();
+}
+
+function renderTodayHabits() {
+  const container = document.getElementById('today-habits');
+  const saveBtn = document.getElementById('save-records-btn');
+
+  if (habits.length === 0) {
+    container.innerHTML = '<div class="loading">習慣が登録されていません</div>';
+    saveBtn.style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = habits.map(h => {
+    const saved = todayRecords[h.id];
+    const pending = pendingRecords[h.id];
+    const current = pending || saved || null;
+
+    const streakText = h.current_streak > 0 ? `${h.current_streak}日連続` : '';
+    const anchorText = h.anchor_habit ? `${h.anchor_habit} ->` : '';
+    const detail = [anchorText, h.achievement_line ? `達成: ${h.achievement_line}` : '', h.minimum_line ? `最低: ${h.minimum_line}` : ''].filter(Boolean).join(' / ');
+
+    return `<div class="habit-record-item">
+      <div class="habit-record-info">
+        <div class="habit-record-name">${esc(h.name)}</div>
+        ${detail ? `<div class="habit-record-detail">${esc(detail)}</div>` : ''}
+        ${streakText ? `<div class="habit-record-streak">${streakText}</div>` : ''}
+      </div>
+      <div class="record-btns">
+        <button class="record-btn ${current === 'achieved' ? 'achieved' : ''}" data-habit="${h.id}" data-status="achieved" title="達成">O</button>
+        <button class="record-btn ${current === 'minimum' ? 'minimum' : ''}" data-habit="${h.id}" data-status="minimum" title="最低">-</button>
+        <button class="record-btn ${current === 'missed' ? 'missed' : ''}" data-habit="${h.id}" data-status="missed" title="未達">X</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // ボタンイベント
+  container.querySelectorAll('.record-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const habitId = btn.dataset.habit;
+      const status = btn.dataset.status;
+
+      // トグル: 同じボタンを再度押したら解除
+      if (pendingRecords[habitId] === status) {
+        delete pendingRecords[habitId];
+      } else {
+        pendingRecords[habitId] = status;
+      }
+
+      renderTodayHabits();
+    });
+  });
+
+  // 保存ボタンの表示
+  const hasPending = Object.keys(pendingRecords).length > 0;
+  saveBtn.style.display = hasPending ? 'block' : 'none';
+}
+
+document.getElementById('save-records-btn').addEventListener('click', async () => {
+  const btn = document.getElementById('save-records-btn');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+
+  const today = toDateStr(new Date());
+  const records = Object.entries(pendingRecords).map(([habitId, status]) => ({ habitId, status }));
+
+  try {
+    const result = await api('/records', {
+      method: 'POST',
+      body: JSON.stringify({ date: today, records }),
+    });
+
+    // 保存されたものをtodayRecordsに統合
+    for (const [habitId, status] of Object.entries(pendingRecords)) {
+      todayRecords[habitId] = status;
+    }
+    pendingRecords = {};
+
+    // 習慣データを更新（ストリーク反映）
+    if (result.habits) habits = result.habits;
+
+    renderTodayHabits();
+    // Stats再計算
+    const achieved = Object.values(todayRecords).filter(s => s === 'achieved').length;
+    const minimum = Object.values(todayRecords).filter(s => s === 'minimum').length;
+    const maxStreak = habits.reduce((max, h) => Math.max(max, h.current_streak || 0), 0);
+    document.getElementById('stats-row').innerHTML = `
+      <div class="stat-box"><div class="stat-number">${achieved + minimum}/${habits.length}</div><div class="stat-label">Today</div></div>
+      <div class="stat-box"><div class="stat-number">${maxStreak}</div><div class="stat-label">Best Streak</div></div>
+      <div class="stat-box"><div class="stat-number">${habits.length}</div><div class="stat-label">Habits</div></div>
+    `;
+  } catch (e) {
+    alert('保存に失敗しました');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '記録を保存';
+});
+
+// =============================================
+// Habits Management
+// =============================================
+async function loadHabits() {
+  habits = await api('/habits');
+  const container = document.getElementById('habits-list');
+
+  if (habits.length === 0) {
+    container.innerHTML = '<div class="loading">習慣が登録されていません</div>';
+    return;
+  }
+
+  container.innerHTML = habits.map(h => {
+    const meta = [
+      h.category === 'lifestyle' ? '生活' : '行動',
+      h.current_streak > 0 ? `${h.current_streak}日連続` : null,
+      h.anchor_habit ? `Anchor: ${h.anchor_habit}` : null,
+    ].filter(Boolean).join(' / ');
+
+    return `<div class="habit-manage-item">
+      <div class="habit-manage-info">
+        <div class="habit-manage-name">${esc(h.name)}</div>
+        <div class="habit-manage-meta">${esc(meta)}</div>
+      </div>
+      <div class="habit-manage-actions">
+        <button class="icon-btn" data-edit="${h.id}" title="編集">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="icon-btn danger" data-delete="${h.id}" data-name="${esc(h.name)}" title="削除">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Edit buttons
+  container.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => openEditHabit(btn.dataset.edit));
+  });
+
+  // Delete buttons
+  container.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm(`"${btn.dataset.name}" を削除しますか？`)) return;
+      await api(`/habits/${btn.dataset.delete}`, { method: 'DELETE' });
+      await loadHabits();
+    });
+  });
+}
+
+// Add habit button
+document.getElementById('add-habit-btn').addEventListener('click', () => {
+  document.getElementById('habit-edit-id').value = '';
+  document.getElementById('habit-modal-title').textContent = '習慣を追加';
+  document.getElementById('habit-submit-btn').textContent = '追加';
+  document.getElementById('habit-form').reset();
+  document.getElementById('habit-modal').classList.add('show');
+});
+
+function openEditHabit(habitId) {
+  const h = habits.find(x => x.id === habitId);
+  if (!h) return;
+
+  document.getElementById('habit-edit-id').value = h.id;
+  document.getElementById('habit-modal-title').textContent = '習慣を編集';
+  document.getElementById('habit-submit-btn').textContent = '保存';
+  document.getElementById('habit-name').value = h.name;
+  document.getElementById('habit-category').value = h.category;
+  document.getElementById('habit-achievement').value = h.achievement_line || '';
+  document.getElementById('habit-minimum').value = h.minimum_line || '';
+  document.getElementById('habit-anchor').value = h.anchor_habit || '';
+  document.getElementById('habit-modal').classList.add('show');
+}
+
+document.getElementById('habit-modal-close').addEventListener('click', () => {
+  document.getElementById('habit-modal').classList.remove('show');
+});
+document.getElementById('habit-modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('show');
+});
+
+document.getElementById('habit-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const editId = document.getElementById('habit-edit-id').value;
+  const payload = {
+    name: document.getElementById('habit-name').value,
+    category: document.getElementById('habit-category').value,
+    achievement_line: document.getElementById('habit-achievement').value || null,
+    minimum_line: document.getElementById('habit-minimum').value || null,
+    anchor_habit: document.getElementById('habit-anchor').value || null,
+  };
+
+  if (editId) {
+    await api(`/habits/${editId}`, { method: 'PUT', body: JSON.stringify(payload) });
+  } else {
+    await api('/habits', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  document.getElementById('habit-modal').classList.remove('show');
+  await loadHabits();
+});
+
+// =============================================
+// Monthly Tracker
+// =============================================
+async function loadTracker() {
+  const year = viewMonth.getFullYear();
+  const month = viewMonth.getMonth();
+  const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const todayStr = toDateStr(today);
+
+  document.getElementById('current-month').textContent = `${year}年${month + 1}月`;
+
+  const [habitsData, records] = await Promise.all([
+    api('/habits'),
+    api(`/records/month?month=${monthStr}`),
+  ]);
+
+  habits = habitsData;
+
+  const recMap = new Map();
+  (records || []).forEach(r => recMap.set(`${r.habit_id}_${r.date}`, r.status));
+
+  const cols = daysInMonth + 1; // label + days
+  let html = `<div class="tracker-grid" style="grid-template-columns: 80px repeat(${daysInMonth}, 26px);">`;
+
+  // Header
+  html += '<div class="tracker-header"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    html += `<div class="tracker-header">${d}</div>`;
+  }
+
+  // Rows
+  for (const h of habits) {
+    html += `<div class="tracker-label">${esc(h.name)}</div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const status = recMap.get(`${h.id}_${dateStr}`);
+      const isFuture = new Date(dateStr) > today;
+      const isToday = dateStr === todayStr;
+      let cls = 'tracker-cell';
+      let content = '';
+
+      if (isFuture) { cls += ' future'; }
+      else if (status === 'achieved') { cls += ' achieved'; content = 'O'; }
+      else if (status === 'minimum') { cls += ' minimum'; content = '-'; }
+      else { cls += ' missed'; }
+      if (isToday) cls += ' today';
+
+      html += `<div class="${cls}">${content}</div>`;
+    }
+  }
+
+  html += '</div>';
+  document.getElementById('tracker-grid').innerHTML = html;
+
+  // Rates
+  const pastDays = Math.min(daysInMonth, today.getMonth() === month && today.getFullYear() === year ? today.getDate() : daysInMonth);
+  document.getElementById('habit-rates').innerHTML = habits.map(h => {
+    const count = (records || []).filter(r => r.habit_id === h.id && (r.status === 'achieved' || r.status === 'minimum')).length;
+    const rate = pastDays > 0 ? Math.round(count / pastDays * 100) : 0;
+    return `<div class="habit-rate-item">
+      <div class="habit-rate-info">
+        <div class="habit-rate-name">${esc(h.name)}</div>
+        <div class="habit-rate-detail">${count}/${pastDays}日</div>
+      </div>
+      <div class="habit-rate-bar"><div class="habit-rate-fill" style="width:${rate}%"></div></div>
+      <div class="habit-rate-pct">${rate}%</div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('prev-month').addEventListener('click', () => {
+  viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1);
+  loadTracker();
+});
+document.getElementById('next-month').addEventListener('click', () => {
+  viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1);
+  loadTracker();
+});
+
+// =============================================
+// Daily Logs
+// =============================================
+document.getElementById('log-date').value = toDateStr(new Date());
+
+document.getElementById('log-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.textContent = '保存中...';
+
+  const payload = {
+    date: document.getElementById('log-date').value,
+    focus: document.getElementById('log-focus').value || null,
+    highlight: document.getElementById('log-highlight').value || null,
+    kpt_keep: document.getElementById('log-keep').value || null,
+    kpt_problem: document.getElementById('log-problem').value || null,
+    kpt_try: document.getElementById('log-try').value || null,
+  };
+
+  await api('/logs', { method: 'POST', body: JSON.stringify(payload) });
+  document.getElementById('log-form').reset();
+  document.getElementById('log-date').value = toDateStr(new Date());
+  btn.disabled = false;
+  btn.textContent = '保存';
+  await loadLogs();
+});
+
+async function loadLogs() {
+  const logs = await api('/logs?limit=14');
+  const container = document.getElementById('past-logs');
+
+  if (!logs || logs.length === 0) {
+    container.innerHTML = '<div class="card"><div class="loading">ログがありません</div></div>';
+    return;
+  }
+
+  container.innerHTML = logs.map(log => `
+    <div class="card log-card">
+      <div class="log-date">${log.date}</div>
+      ${log.focus ? `<div class="log-field"><span class="log-label">Focus</span> ${esc(log.focus)}</div>` : ''}
+      ${log.highlight ? `<div class="log-field"><span class="log-label">Highlight</span> ${esc(log.highlight)}</div>` : ''}
+      ${log.kpt_keep ? `<div class="log-field"><span class="log-label">K</span> ${esc(log.kpt_keep)}</div>` : ''}
+      ${log.kpt_problem ? `<div class="log-field"><span class="log-label">P</span> ${esc(log.kpt_problem)}</div>` : ''}
+      ${log.kpt_try ? `<div class="log-field"><span class="log-label">T</span> ${esc(log.kpt_try)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+// =============================================
+// Profile
+// =============================================
+async function loadProfile() {
+  const data = await api('/profile');
+  const profile = data?.profile;
+
+  if (!profile) {
+    document.getElementById('profile-info').innerHTML = '<div class="loading">プロファイル未設定</div>';
+    return;
+  }
+
+  const mLabels = { M1: '自律駆動型', M2: '納得駆動型', M3: '他者駆動型', M4: '自由駆動型' };
+  const fLabels = { F1: '動機減衰型', F2: '能力不足型', F3: 'きっかけ欠如型', F4: '基準過剰型' };
+  const rLabels = { R1: '宣言リセット型', R2: '分析改善型', R3: '外部再接続型', R4: '最小行動型' };
+  const toneLabels = { polite: '丁寧', frank: 'フランク', aniki: '兄貴/姉御', tough: '兄貴/姉御', neutral: '淡々' };
+
+  const rows = [
+    ['Nickname', profile.nickname ?? '-'],
+    ['Type', profile.type_code ?? '-'],
+    ['Motivation', mLabels[profile.motivation_type] ?? '-'],
+    ['Failure', fLabels[profile.failure_type] ?? '-'],
+    ['Recovery', rLabels[profile.recovery_type] ?? '-'],
+    ['Tone', toneLabels[profile.coach_tone] ?? '-'],
+    ['Morning', profile.morning_notify_time ?? '-'],
+    ['Evening', profile.evening_notify_time ?? '-'],
+  ];
+
+  document.getElementById('profile-info').innerHTML = rows.map(([k, v]) =>
+    `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span style="color:var(--text-light)">${k}</span>
+      <span style="font-weight:600">${esc(v)}</span>
+    </div>`
+  ).join('');
+}
+
+// =============================================
+// Helpers
+// =============================================
+function toDateStr(d) {
+  return d.toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+}
+function esc(str) {
+  if (!str) return '';
+  const el = document.createElement('span');
+  el.textContent = str;
+  return el.innerHTML;
+}
+
+// Boot
+init();
+</script>
+</body>
+</html>

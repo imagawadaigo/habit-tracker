@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" width="640" height="640">
+  <!-- Background circle - warm coral -->
+  <circle cx="320" cy="320" r="320" fill="#FF8A65"/>
+
+  <!-- Face circle - cream white -->
+  <circle cx="320" cy="310" r="220" fill="#FFF8F0"/>
+
+  <!-- Left eye -->
+  <ellipse cx="250" cy="280" rx="22" ry="26" fill="#4A3728"/>
+  <!-- Left eye highlight -->
+  <circle cx="242" cy="270" r="7" fill="#FFFFFF"/>
+
+  <!-- Right eye -->
+  <ellipse cx="390" cy="280" rx="22" ry="26" fill="#4A3728"/>
+  <!-- Right eye highlight -->
+  <circle cx="382" cy="270" r="7" fill="#FFFFFF"/>
+
+  <!-- Slight smile - confident, not overly cheerful -->
+  <path d="M 265 360 Q 320 400 375 360" stroke="#4A3728" stroke-width="8" fill="none" stroke-linecap="round"/>
+
+  <!-- Left cheek blush -->
+  <ellipse cx="215" cy="345" rx="30" ry="18" fill="#FFAB91" opacity="0.6"/>
+
+  <!-- Right cheek blush -->
+  <ellipse cx="425" cy="345" rx="30" ry="18" fill="#FFAB91" opacity="0.6"/>
+
+  <!-- Small hair tuft - adds character -->
+  <path d="M 280 95 Q 300 60 330 90 Q 350 55 370 95" stroke="none" fill="#FF7043" />
+</svg>

@@ -1,0 +1,10 @@
+name = "riz-habit-bot"
+main = "src/index.ts"
+compatibility_date = "2025-04-01"
+
+[vars]
+ENVIRONMENT = "production"
+
+# 毎時0分に実行（ユーザーごとの通知時刻と照合）
+[triggers]
+crons = ["0 * * * *"]
