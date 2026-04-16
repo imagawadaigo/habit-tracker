@@ -42,7 +42,7 @@ app.get('/api/summary', async (c) => {
       supabase.from('habit_records').select('*').eq('user_id', user.id).gte('date', weekAgo),
       supabase.from('user_notes').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(30),
       supabase.from('habit_stages').select('*').eq('user_id', user.id),
-      supabase.from('chat_messages').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
+      supabase.from('unified_conversations').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
     ]);
 
     const todayMap = new Map((todayRecs ?? []).map((r: any) => [r.habit_id, r.status]));
@@ -93,6 +93,7 @@ app.get('/api/summary', async (c) => {
       daily_summary: dailySummary,
       notes: (notes ?? []).map((n: any) => ({ category: n.category, content: n.content })),
       recent_conversations: ((recentChats ?? []) as any[]).reverse().map((m: any) => ({
+        channel: m.channel,
         role: m.role,
         content: m.content,
         at: m.created_at,

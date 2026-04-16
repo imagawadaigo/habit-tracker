@@ -96,7 +96,7 @@ export function buildHabitListFlex(
     const habitCreated = h.created_at ? h.created_at.split('T')[0] : days[0];
     const weekDots = days.map(d => {
       // 登録前の日は空欄
-      if (d < habitCreated) return { type: 'text', text: ' ', size: 'xs', color: '#FFFFFF', align: 'center', flex: 1 };
+      if (d < habitCreated) return { type: 'box', layout: 'vertical', contents: [{ type: 'filler' }], flex: 1 };
       const rec = weekRecords.find(r => r.habit_id === h.id && r.date === d);
       if (!rec) return { type: 'text', text: '-', size: 'xs', color: '#DDDDDD', align: 'center', flex: 1 };
       if (rec.status === 'achieved') return { type: 'text', text: 'O', size: 'xs', color: '#4CAF50', align: 'center', flex: 1, weight: 'bold' };
@@ -134,7 +134,7 @@ export function buildHabitListFlex(
     }
 
     contents.push(
-      { type: 'box', layout: 'horizontal', contents: weekDots, paddingTop: '2px' },
+      { type: 'box', layout: 'horizontal', contents: weekDots, margin: 'xs' },
       { type: 'text', text: `今週 ${weekTotal}/${eligibleDays}日 (${rate}%)`, size: 'xxs', color: '#8D6E63', align: 'end' }
     );
 
@@ -172,7 +172,7 @@ export function buildHabitListFlex(
           },
         ],
         spacing: 'sm',
-        paddingTop: '4px',
+        margin: 'xs',
       });
     } else {
       contents.push({
@@ -181,7 +181,7 @@ export function buildHabitListFlex(
         size: 'xxs',
         color: todayStatus === 'achieved' ? '#4CAF50' : '#FF9800',
         align: 'center',
-        paddingTop: '4px',
+        margin: 'xs',
       });
     }
 

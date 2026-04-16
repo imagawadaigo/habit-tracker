@@ -42,13 +42,11 @@ async function processEvents(env: Env, events: LineEvent[]) {
         case 'follow':
           await handleFollow(env, supabase, user, event);
           break;
-
         case 'message':
           if (event.message?.type === 'text' && event.message.text) {
             await handleTextMessage(env, supabase, user, profile, event);
           }
           break;
-
         case 'postback':
           if (event.postback) {
             await handlePostback(env, supabase, user, profile, event);

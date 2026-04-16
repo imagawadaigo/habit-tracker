@@ -18,6 +18,8 @@ export async function replyMessage(
 
   if (!res.ok) {
     const body = await res.text();
+    console.error(`[replyMessage] LINE reply failed: ${res.status}`, body);
+    console.error('[replyMessage] sent messages:', JSON.stringify(messages).slice(0, 2000));
     throw new Error(`LINE reply failed: ${res.status} ${body}`);
   }
 }

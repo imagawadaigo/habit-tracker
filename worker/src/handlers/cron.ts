@@ -669,7 +669,7 @@ function buildCrisisText(
   } else if (style === 'gentle') {
     switch (tone) {
       case 'frank': lines.push('大丈夫、まだ取り戻せるよ。'); break;
-      case 'aniki': lines.push('誰でも止まる時はある。'); break;
+      case 'aniki': lines.push('止まることはある。ゼロに戻ったわけじゃない。'); break;
       case 'neutral': lines.push('再開は常に可能です。'); break;
       default: lines.push('大丈夫です。ここから立て直しましょう。'); break;
     }
@@ -697,7 +697,12 @@ function buildCrisisText(
   // M3特有: 報告文脈の強化
   if (mType === 'M3') {
     lines.push('');
-    lines.push('あなたの報告を、ここで待っています。');
+    switch (tone) {
+      case 'frank': lines.push('結果教えてね。待ってるから。'); break;
+      case 'aniki': lines.push('報告しろ。俺はここにいる。'); break;
+      case 'neutral': lines.push('結果の報告をお待ちしています。'); break;
+      default: lines.push('あなたの報告を、ここで待っています。'); break;
+    }
   }
 
   return lines.join('\n');

@@ -271,24 +271,36 @@ async function handleListHabits(
   profile: UserProfile | null,
   event: LineEvent
 ) {
-  const habits = await getActiveHabits(supabase, user.id);
+  try {
+    const habits = await getActiveHabits(supabase, user.id);
 
-  if (habits.length === 0) {
-    await replyMessage(env, event.replyToken, [
-      textMessage('まだ習慣が登録されていません。\n「追加 朝散歩」のように送ってください。'),
+    if (habits.length === 0) {
+      await replyMessage(env, event.replyToken, [
+        textMessage('まだ習慣が登録されていません。\n「追加 朝散歩」のように送ってください。'),
+      ]);
+      return;
+    }
+
+    const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+    const [todayRecs, weekRecs] = await Promise.all([
+      getTodayRecords(supabase, user.id, today),
+      getRecentRecords(supabase, user.id, 7),
     ]);
-    return;
+
+    const flexContent = buildHabitListFlex(habits, todayRecs, weekRecs, today, profile);
+    await replyMessage(env, event.replyToken, [
+      flexMessage('習慣一覧', flexContent),
+    ]);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[handleListHabits] error:', msg);
+    // エラー内容をユーザーに返してデバッグ
+    try {
+      await replyMessage(env, event.replyToken, [
+        textMessage('一覧の表示でエラーが発生しました。もう一度お試しください。'),
+      ]);
+    } catch { /* replyToken already used */ }
   }
-
-  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
-  const [todayRecs, weekRecs] = await Promise.all([
-    getTodayRecords(supabase, user.id, today),
-    getRecentRecords(supabase, user.id, 7),
-  ]);
-
-  await replyMessage(env, event.replyToken, [
-    flexMessage('習慣一覧', buildHabitListFlex(habits, todayRecs, weekRecs, today, profile)),
-  ]);
 }
 
 // === クイック記録（改善版）===
