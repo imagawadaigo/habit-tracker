@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import type { Env, User, UserProfile, LineEvent, Habit } from '../types';
-import { replyMessage, textMessage, flexMessage } from '../lib/line';
+import { replyMessage, textMessage, flexMessage, showLoadingAnimation } from '../lib/line';
 import {
   upsertProfile,
   getActiveHabits,
@@ -9,8 +9,16 @@ import {
   recordHabits,
   getTodayRecords,
   upsertDailyLog,
+  getRecentRecords,
+  getRecentMessages,
+  saveChatMessage,
+  getUserNotes,
+  saveUserNotes,
 } from '../lib/supabase';
 import { evaluateStage, getHabitStages } from '../lib/stage';
+import { buildHabitListFlex } from '../lib/flex';
+import { getCoachResponse, extractUserInfo } from '../lib/coach';
+import { calcRecordXp, calcLogXp, grantXp, xpToNextLevel } from '../lib/xp';
 import { onboardingQ1 } from './onboarding-steps';
 
 export async function handleTextMessage(
@@ -58,7 +66,7 @@ export async function handleTextMessage(
   }
 
   if (lower === '一覧' || lower === 'list') {
-    await handleListHabits(env, supabase, user, event);
+    await handleListHabits(env, supabase, user, profile, event);
     return;
   }
 
@@ -79,6 +87,12 @@ export async function handleTextMessage(
 
   if (lower === 'ヘルプ' || lower === 'help') {
     await handleHelp(env, event);
+    return;
+  }
+
+  if (lower.startsWith('ログ ') || lower.startsWith('log ')) {
+    const content = text.replace(/^(ログ|log)\s+/i, '').trim();
+    await handleOneLineLog(env, supabase, user, event, content);
     return;
   }
 
@@ -254,6 +268,7 @@ async function handleListHabits(
   env: Env,
   supabase: SupabaseClient,
   user: User,
+  profile: UserProfile | null,
   event: LineEvent
 ) {
   const habits = await getActiveHabits(supabase, user.id);
@@ -266,20 +281,13 @@ async function handleListHabits(
   }
 
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
-  const records = await getTodayRecords(supabase, user.id, today);
-  const recordMap = new Map(records.map((r) => [r.habit_id, r.status]));
-  const stages = await getHabitStages(supabase, user.id);
-
-  const lines = habits.map((h, i) => {
-    const status = recordMap.get(h.id);
-    const mark = status === 'achieved' ? '[x]' : status === 'minimum' ? '[/]' : '[ ]';
-    const streak = h.current_streak > 0 ? ` ${h.current_streak}d` : '';
-    const anchor = h.anchor_habit ? ` (${h.anchor_habit} ->)` : '';
-    return `${i + 1}. ${mark} ${h.name}${streak}${anchor}`;
-  });
+  const [todayRecs, weekRecs] = await Promise.all([
+    getTodayRecords(supabase, user.id, today),
+    getRecentRecords(supabase, user.id, 7),
+  ]);
 
   await replyMessage(env, event.replyToken, [
-    textMessage(`今日の習慣 (${today})\n\n${lines.join('\n')}\n\n記録: 番号を送信 (例: 1,2,3m)\nx=達成 / m=最低ライン`),
+    flexMessage('習慣一覧', buildHabitListFlex(habits, todayRecs, weekRecs, today, profile)),
   ]);
 }
 
@@ -382,16 +390,33 @@ async function handleQuickRecord(
   const allHabitsCount = habits.length;
   const todayRecords = await getTodayRecords(supabase, user.id, today);
   const doneCount = todayRecords.filter((r) => r.status === 'achieved' || r.status === 'minimum').length;
+  const allComplete = doneCount === allHabitsCount;
 
   let overallMsg = '';
-  if (doneCount === allHabitsCount) {
+  if (allComplete) {
     overallMsg = getAllDoneFeedback(tone, mType);
   } else {
     overallMsg = getPartialFeedback(tone, doneCount, allHabitsCount);
   }
 
+  // XP付与
+  const streaksForXp = records.map(r => {
+    const h = updatedMap.get(r.habitId);
+    return { streak: h?.current_streak ?? 0 };
+  });
+  const xpGained = calcRecordXp(records, streaksForXp, allComplete);
+  const xpResult = await grantXp(supabase, user.id, xpGained);
+
+  let xpLine = `+${xpResult.xpGained} XP`;
+  if (xpResult.leveledUp) {
+    xpLine += ` >> Lv.${xpResult.level} UP!`;
+  } else {
+    const progress = xpToNextLevel(xpResult.totalXp);
+    xpLine += ` (Lv.${xpResult.level} ${progress.current}/${progress.needed})`;
+  }
+
   await replyMessage(env, event.replyToken, [
-    textMessage(`${lines.join('\n')}\n\n${overallMsg}`),
+    textMessage(`${lines.join('\n')}\n\n${overallMsg}\n${xpLine}`),
   ]);
 }
 
@@ -484,6 +509,58 @@ function settingsButton(label: string, data: string): Record<string, unknown> {
   };
 }
 
+// === ひとことログ ===
+
+async function handleOneLineLog(
+  env: Env,
+  supabase: SupabaseClient,
+  user: User,
+  event: LineEvent,
+  content: string
+) {
+  if (!content) {
+    await replyMessage(env, event.replyToken, [
+      textMessage('ひとことを書いてください。\n例: ログ 朝ちゃんと起きれた'),
+    ]);
+    return;
+  }
+
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+
+  // daily_logsのhighlightに保存（既存があれば追記）
+  const { data: existing } = await supabase
+    .from('daily_logs')
+    .select('highlight')
+    .eq('user_id', user.id)
+    .eq('date', today)
+    .single();
+
+  const prev = existing?.highlight ?? '';
+  const newHighlight = prev ? `${prev}\n${content}` : content;
+
+  await upsertDailyLog(supabase, user.id, today, { highlight: newHighlight });
+
+  // XP付与（1日1回のみボーナス）
+  const isFirstLog = !prev;
+  if (isFirstLog) {
+    const xpGained = calcLogXp();
+    const xpResult = await grantXp(supabase, user.id, xpGained);
+
+    let xpLine = `+${xpResult.xpGained} XP`;
+    if (xpResult.leveledUp) {
+      xpLine += ` >> Lv.${xpResult.level} UP!`;
+    }
+
+    await replyMessage(env, event.replyToken, [
+      textMessage(`${content}\n\n${xpLine}`),
+    ]);
+  } else {
+    await replyMessage(env, event.replyToken, [
+      textMessage(`${content}`),
+    ]);
+  }
+}
+
 // === ヘルプ ===
 
 async function handleHelp(env: Env, event: LineEvent) {
@@ -502,6 +579,7 @@ async function handleHelp(env: Env, event: LineEvent) {
         '設定 〇〇 達成:X 最低:Y',
         '  ... 達成/最低ラインの設定',
         '設定 ... 関わり方・話し方の変更',
+        'ログ 〇〇 ... ひとこと日記 (+XP)',
         'リセット ... 全データを初期化',
         'プロファイルリセット ... プロファイルのみ',
         'ヘルプ ... この案内を表示',
@@ -520,20 +598,49 @@ async function handleFreeText(
   event: LineEvent,
   text: string
 ) {
-  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
-  const tone = profile?.coach_tone ?? 'polite';
+  // ローディングインジケーター表示（AI応答生成中）
+  await showLoadingAnimation(env, event.source.userId);
 
-  if (text.length <= 50) {
-    await upsertDailyLog(supabase, user.id, today, { highlight: text });
-    const response = getFreeTextResponse(tone, text);
-    await replyMessage(env, event.replyToken, [textMessage(response)]);
-  } else {
-    // 長文 → 日次ログのメモとして保存（Phase 2でAI応答に回す）
-    await upsertDailyLog(supabase, user.id, today, { kpt_keep: text });
-    await replyMessage(env, event.replyToken, [
-      textMessage(getFreeTextLongResponse(tone)),
-    ]);
-  }
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+
+  // 会話履歴・習慣・記録・ユーザーメモを並行取得
+  const [chatHistory, habits, todayRecs, logs, userNotes] = await Promise.all([
+    getRecentMessages(supabase, user.id, 10),
+    getActiveHabits(supabase, user.id),
+    getTodayRecords(supabase, user.id, today),
+    supabase
+      .from('daily_logs')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('date', today)
+      .single(),
+    getUserNotes(supabase, user.id),
+  ]);
+
+  const responses = await getCoachResponse(env, {
+    nickname: profile?.nickname ?? 'ユーザー',
+    profile,
+    habits,
+    todayRecords: todayRecs,
+    recentLog: logs.data ?? null,
+    chatHistory,
+    userNotes,
+  }, text);
+
+  // 返答を最優先で送信（速度改善）
+  await replyMessage(env, event.replyToken, responses.map(r => textMessage(r)));
+
+  // DB保存は返答後に非同期実行（ユーザー体感を妨げない）
+  const assistantText = responses.join('\n\n');
+  saveChatMessage(supabase, user.id, 'user', text)
+    .then(() => saveChatMessage(supabase, user.id, 'assistant', assistantText))
+    .catch(() => {});
+
+  // 会話から新しいユーザー情報を抽出して保存（非同期）
+  const allHistory = [...chatHistory, { role: 'user' as const, content: text }, { role: 'assistant' as const, content: assistantText }];
+  extractUserInfo(env, allHistory as any, userNotes).then(notes => {
+    if (notes.length > 0) saveUserNotes(supabase, user.id, notes);
+  }).catch(() => {});
 }
 
 // =============================================
@@ -611,20 +718,3 @@ function getPartialFeedback(tone: string, done: number, total: number): string {
   }
 }
 
-function getFreeTextResponse(tone: string, text: string): string {
-  switch (tone) {
-    case 'frank': return `今日のハイライト: ${text}\nいいね！習慣の記録は番号を送ってね。`;
-    case 'aniki': return `ハイライト: ${text}\n記録済みだ。習慣は番号で報告しろ。`;
-    case 'neutral': return `ハイライト記録: ${text}\n習慣の記録は番号送信で入力可能です。`;
-    default: return `今日のハイライト: ${text}\n\n習慣の記録は番号を送って入力できます。`;
-  }
-}
-
-function getFreeTextLongResponse(tone: string): string {
-  switch (tone) {
-    case 'frank': return '記録したよ。ゆっくり振り返ろう。';
-    case 'aniki': return '受け取った。記録に残した。';
-    case 'neutral': return '日次ログに記録しました。';
-    default: return 'メモとして記録しました。振り返りに活用します。';
-  }
-}

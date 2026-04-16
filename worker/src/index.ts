@@ -3,6 +3,7 @@ import type { Env } from './types';
 import { webhook } from './routes/webhook';
 import { portalApi } from './routes/portal-api';
 import { morningPush, eveningPush } from './handlers/cron';
+import { getSupabase } from './lib/supabase';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -14,6 +15,94 @@ app.post('/webhook', webhook);
 
 // Portal API（LIFF経由のフロントエンド用）
 app.route('/portal', portalApi);
+
+// === 河了貂（秘書）用サマリーAPI ===
+// 全ユーザーの習慣進捗・プロファイル・メモ・会話ログ・傾向を一括返却
+app.get('/api/summary', async (c) => {
+  const supabase = getSupabase(c.env);
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+  const weekAgo = new Date(Date.now() - 7 * 86400000).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+
+  const { data: users } = await supabase.from('users').select('*');
+  if (!users || users.length === 0) return c.json({ users: [] });
+
+  const summaries = await Promise.all(users.map(async (user) => {
+    const [
+      { data: profile },
+      { data: habits },
+      { data: todayRecs },
+      { data: weekRecs },
+      { data: notes },
+      { data: stages },
+      { data: recentChats },
+    ] = await Promise.all([
+      supabase.from('user_profiles').select('*').eq('user_id', user.id).single(),
+      supabase.from('habits').select('*').eq('user_id', user.id).eq('is_active', true).order('sort_order'),
+      supabase.from('habit_records').select('*').eq('user_id', user.id).eq('date', today),
+      supabase.from('habit_records').select('*').eq('user_id', user.id).gte('date', weekAgo),
+      supabase.from('user_notes').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(30),
+      supabase.from('habit_stages').select('*').eq('user_id', user.id),
+      supabase.from('chat_messages').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
+    ]);
+
+    const todayMap = new Map((todayRecs ?? []).map((r: any) => [r.habit_id, r.status]));
+
+    // 日別達成サマリー（直近7日）
+    const days: string[] = [];
+    for (let i = 6; i >= 0; i--) {
+      days.push(new Date(Date.now() - i * 86400000).toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' }));
+    }
+    const dailySummary = days.map(d => {
+      const dayRecs = (weekRecs ?? []).filter((r: any) => r.date === d);
+      const achieved = dayRecs.filter((r: any) => r.status === 'achieved').length;
+      const minimum = dayRecs.filter((r: any) => r.status === 'minimum').length;
+      return { date: d, achieved, minimum, total: achieved + minimum };
+    });
+
+    return {
+      user: {
+        id: user.id,
+        display_name: user.display_name,
+        onboarding_completed: user.onboarding_completed,
+        created_at: user.created_at,
+      },
+      profile: profile ? {
+        nickname: profile.nickname,
+        type_code: profile.type_code,
+        motivation_type: profile.motivation_type,
+        failure_type: profile.failure_type,
+        recovery_type: profile.recovery_type,
+        coach_style: profile.coach_style,
+        coach_tone: profile.coach_tone,
+        life_rhythm: profile.life_rhythm,
+        level: profile.level,
+        total_xp: profile.total_xp,
+      } : null,
+      habits: (habits ?? []).map((h: any) => ({
+        name: h.name,
+        current_streak: h.current_streak,
+        max_streak: h.max_streak,
+        created_at: h.created_at,
+        today_status: todayMap.get(h.id) ?? 'not_recorded',
+        week_achieved: (weekRecs ?? []).filter((r: any) => r.habit_id === h.id && (r.status === 'achieved' || r.status === 'minimum')).length,
+        achievement_line: h.achievement_line,
+        minimum_line: h.minimum_line,
+        anchor_habit: h.anchor_habit,
+        stage: (stages ?? []).find((s: any) => s.habit_id === h.id)?.current_stage ?? 'unknown',
+      })),
+      daily_summary: dailySummary,
+      notes: (notes ?? []).map((n: any) => ({ category: n.category, content: n.content })),
+      recent_conversations: ((recentChats ?? []) as any[]).reverse().map((m: any) => ({
+        role: m.role,
+        content: m.content,
+        at: m.created_at,
+      })),
+      today,
+    };
+  }));
+
+  return c.json({ users: summaries, fetched_at: new Date().toISOString() });
+});
 
 // 手動トリガー（テスト用）
 app.post('/api/trigger/morning', async (c) => {

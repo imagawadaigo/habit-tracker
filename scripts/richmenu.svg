@@ -27,74 +27,73 @@
   <rect x="853" y="867" width="794" height="795" fill="url(#card-bottom)" rx="24"/>
   <rect x="1682" y="867" width="794" height="795" fill="url(#card-bottom)" rx="24"/>
 
-  <!-- === Upper Left: Record (checkmark in circle) === -->
-  <g transform="translate(421, 310)">
-    <circle cx="0" cy="0" r="80" fill="none" stroke="#FF8A65" stroke-width="6"/>
-    <polyline points="-30,4 -8,28 32,-20" fill="none" stroke="#FF8A65" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- === Upper Left: Record === -->
+  <g transform="translate(421, 250)">
+    <circle cx="0" cy="0" r="100" fill="none" stroke="#FF8A65" stroke-width="8"/>
+    <polyline points="-38,4 -12,36 40,-28" fill="none" stroke="#FF8A65" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
-  <text x="421" y="480" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="48" font-weight="700" fill="#4E342E">Record</text>
-  <text x="421" y="530" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="30" fill="#8D6E63">今日の記録</text>
+  <text x="421" y="480" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="90" font-weight="700" fill="#4E342E">Record</text>
+  <text x="421" y="560" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="52" fill="#8D6E63">今日の記録</text>
 
-  <!-- === Upper Center: Habits (three horizontal lines with dots) === -->
-  <g transform="translate(1250, 310)">
-    <circle cx="-50" cy="-30" r="8" fill="#FF8A65"/>
-    <line x1="-28" y1="-30" x2="50" y2="-30" stroke="#FF8A65" stroke-width="6" stroke-linecap="round"/>
-    <circle cx="-50" cy="4" r="8" fill="#FFAB91"/>
-    <line x1="-28" y1="4" x2="50" y2="4" stroke="#FFAB91" stroke-width="6" stroke-linecap="round"/>
-    <circle cx="-50" cy="38" r="8" fill="#FFCC80"/>
-    <line x1="-28" y1="38" x2="50" y2="38" stroke="#FFCC80" stroke-width="6" stroke-linecap="round"/>
+  <!-- === Upper Center: Habits === -->
+  <g transform="translate(1250, 250)">
+    <circle cx="-60" cy="-38" r="12" fill="#FF8A65"/>
+    <line x1="-34" y1="-38" x2="60" y2="-38" stroke="#FF8A65" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="-60" cy="4" r="12" fill="#FFAB91"/>
+    <line x1="-34" y1="4" x2="60" y2="4" stroke="#FFAB91" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="-60" cy="46" r="12" fill="#FFCC80"/>
+    <line x1="-34" y1="46" x2="60" y2="46" stroke="#FFCC80" stroke-width="9" stroke-linecap="round"/>
   </g>
-  <text x="1250" y="480" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="48" font-weight="700" fill="#4E342E">Habits</text>
-  <text x="1250" y="530" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="30" fill="#8D6E63">習慣一覧</text>
+  <text x="1250" y="480" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="90" font-weight="700" fill="#4E342E">Habits</text>
+  <text x="1250" y="560" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="52" fill="#8D6E63">習慣一覧</text>
 
-  <!-- === Upper Right: Settings (gear) === -->
-  <g transform="translate(2079, 310)">
-    <circle cx="0" cy="0" r="28" fill="none" stroke="#FF8A65" stroke-width="6"/>
-    <circle cx="0" cy="0" r="12" fill="#FF8A65"/>
-    <!-- Gear teeth -->
-    <line x1="0" y1="-42" x2="0" y2="-56" stroke="#FF8A65" stroke-width="8" stroke-linecap="round"/>
-    <line x1="0" y1="42" x2="0" y2="56" stroke="#FF8A65" stroke-width="8" stroke-linecap="round"/>
-    <line x1="-42" y1="0" x2="-56" y2="0" stroke="#FF8A65" stroke-width="8" stroke-linecap="round"/>
-    <line x1="42" y1="0" x2="56" y2="0" stroke="#FF8A65" stroke-width="8" stroke-linecap="round"/>
-    <line x1="-30" y1="-30" x2="-40" y2="-40" stroke="#FF8A65" stroke-width="8" stroke-linecap="round"/>
-    <line x1="30" y1="-30" x2="40" y2="-40" stroke="#FF8A65" stroke-width="8" stroke-linecap="round"/>
-    <line x1="-30" y1="30" x2="-40" y2="40" stroke="#FF8A65" stroke-width="8" stroke-linecap="round"/>
-    <line x1="30" y1="30" x2="40" y2="40" stroke="#FF8A65" stroke-width="8" stroke-linecap="round"/>
+  <!-- === Upper Right: Settings === -->
+  <g transform="translate(2079, 250)">
+    <circle cx="0" cy="0" r="36" fill="none" stroke="#FF8A65" stroke-width="8"/>
+    <circle cx="0" cy="0" r="16" fill="#FF8A65"/>
+    <line x1="0" y1="-52" x2="0" y2="-70" stroke="#FF8A65" stroke-width="11" stroke-linecap="round"/>
+    <line x1="0" y1="52" x2="0" y2="70" stroke="#FF8A65" stroke-width="11" stroke-linecap="round"/>
+    <line x1="-52" y1="0" x2="-70" y2="0" stroke="#FF8A65" stroke-width="11" stroke-linecap="round"/>
+    <line x1="52" y1="0" x2="70" y2="0" stroke="#FF8A65" stroke-width="11" stroke-linecap="round"/>
+    <line x1="-37" y1="-37" x2="-50" y2="-50" stroke="#FF8A65" stroke-width="11" stroke-linecap="round"/>
+    <line x1="37" y1="-37" x2="50" y2="-50" stroke="#FF8A65" stroke-width="11" stroke-linecap="round"/>
+    <line x1="-37" y1="37" x2="-50" y2="50" stroke="#FF8A65" stroke-width="11" stroke-linecap="round"/>
+    <line x1="37" y1="37" x2="50" y2="50" stroke="#FF8A65" stroke-width="11" stroke-linecap="round"/>
   </g>
-  <text x="2079" y="480" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="48" font-weight="700" fill="#4E342E">Settings</text>
-  <text x="2079" y="530" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="30" fill="#8D6E63">設定</text>
+  <text x="2079" y="480" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="90" font-weight="700" fill="#4E342E">Settings</text>
+  <text x="2079" y="560" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="52" fill="#8D6E63">設定</text>
 
-  <!-- === Lower Left: Daily Log (open book / journal) === -->
-  <g transform="translate(421, 1153)">
-    <path d="M-44,-36 L-44,36 Q0,24 0,24 Q0,24 44,36 L44,-36 Q0,-24 0,-24 Q0,-24 -44,-36 Z" fill="none" stroke="#E64A19" stroke-width="5" stroke-linejoin="round"/>
-    <line x1="0" y1="-24" x2="0" y2="24" stroke="#E64A19" stroke-width="3"/>
-    <line x1="-30" y1="-16" x2="-10" y2="-16" stroke="#FFAB91" stroke-width="3" stroke-linecap="round"/>
-    <line x1="-30" y1="-4" x2="-10" y2="-4" stroke="#FFAB91" stroke-width="3" stroke-linecap="round"/>
-    <line x1="-30" y1="8" x2="-16" y2="8" stroke="#FFAB91" stroke-width="3" stroke-linecap="round"/>
-    <line x1="10" y1="-16" x2="30" y2="-16" stroke="#FFAB91" stroke-width="3" stroke-linecap="round"/>
-    <line x1="10" y1="-4" x2="30" y2="-4" stroke="#FFAB91" stroke-width="3" stroke-linecap="round"/>
-    <line x1="10" y1="8" x2="24" y2="8" stroke="#FFAB91" stroke-width="3" stroke-linecap="round"/>
+  <!-- === Lower Left: Log === -->
+  <g transform="translate(421, 1090)">
+    <path d="M-55,-46 L-55,46 Q0,30 0,30 Q0,30 55,46 L55,-46 Q0,-30 0,-30 Q0,-30 -55,-46 Z" fill="none" stroke="#E64A19" stroke-width="7" stroke-linejoin="round"/>
+    <line x1="0" y1="-30" x2="0" y2="30" stroke="#E64A19" stroke-width="5"/>
+    <line x1="-38" y1="-20" x2="-14" y2="-20" stroke="#FFAB91" stroke-width="5" stroke-linecap="round"/>
+    <line x1="-38" y1="-4" x2="-14" y2="-4" stroke="#FFAB91" stroke-width="5" stroke-linecap="round"/>
+    <line x1="-38" y1="12" x2="-20" y2="12" stroke="#FFAB91" stroke-width="5" stroke-linecap="round"/>
+    <line x1="14" y1="-20" x2="38" y2="-20" stroke="#FFAB91" stroke-width="5" stroke-linecap="round"/>
+    <line x1="14" y1="-4" x2="38" y2="-4" stroke="#FFAB91" stroke-width="5" stroke-linecap="round"/>
+    <line x1="14" y1="12" x2="30" y2="12" stroke="#FFAB91" stroke-width="5" stroke-linecap="round"/>
   </g>
-  <text x="421" y="1323" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="48" font-weight="700" fill="#5D4037">Log</text>
-  <text x="421" y="1373" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="30" fill="#8D6E63">日次ログ</text>
+  <text x="421" y="1320" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="90" font-weight="700" fill="#5D4037">Log</text>
+  <text x="421" y="1400" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="52" fill="#8D6E63">日次ログ</text>
 
-  <!-- === Lower Center: Tracker (bar chart) === -->
-  <g transform="translate(1250, 1153)">
-    <rect x="-44" y="10" width="16" height="30" rx="3" fill="#FFCC80"/>
-    <rect x="-20" y="-8" width="16" height="48" rx="3" fill="#FFAB91"/>
-    <rect x="4" y="-26" width="16" height="66" rx="3" fill="#FF8A65"/>
-    <rect x="28" y="-40" width="16" height="80" rx="3" fill="#E64A19"/>
-    <line x1="-52" y1="42" x2="52" y2="42" stroke="#5D4037" stroke-width="3" stroke-linecap="round"/>
+  <!-- === Lower Center: Tracker === -->
+  <g transform="translate(1250, 1090)">
+    <rect x="-55" y="14" width="22" height="40" rx="4" fill="#FFCC80"/>
+    <rect x="-24" y="-12" width="22" height="66" rx="4" fill="#FFAB91"/>
+    <rect x="7" y="-34" width="22" height="88" rx="4" fill="#FF8A65"/>
+    <rect x="38" y="-54" width="22" height="108" rx="4" fill="#E64A19"/>
+    <line x1="-64" y1="56" x2="68" y2="56" stroke="#5D4037" stroke-width="5" stroke-linecap="round"/>
   </g>
-  <text x="1250" y="1323" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="48" font-weight="700" fill="#5D4037">Tracker</text>
-  <text x="1250" y="1373" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="30" fill="#8D6E63">月間トラッカー</text>
+  <text x="1250" y="1320" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="90" font-weight="700" fill="#5D4037">Tracker</text>
+  <text x="1250" y="1400" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="52" fill="#8D6E63">月間トラッカー</text>
 
-  <!-- === Lower Right: Help (question mark) === -->
-  <g transform="translate(2079, 1153)">
-    <circle cx="0" cy="0" r="48" fill="none" stroke="#E64A19" stroke-width="5"/>
-    <path d="M-14,-18 Q-14,-34 0,-34 Q14,-34 14,-18 Q14,-8 0,-4" fill="none" stroke="#E64A19" stroke-width="6" stroke-linecap="round"/>
-    <circle cx="0" cy="16" r="5" fill="#E64A19"/>
+  <!-- === Lower Right: Help === -->
+  <g transform="translate(2079, 1090)">
+    <circle cx="0" cy="0" r="62" fill="none" stroke="#E64A19" stroke-width="7"/>
+    <path d="M-18,-24 Q-18,-44 0,-44 Q18,-44 18,-24 Q18,-12 0,-6" fill="none" stroke="#E64A19" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="0" cy="20" r="7" fill="#E64A19"/>
   </g>
-  <text x="2079" y="1323" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="48" font-weight="700" fill="#5D4037">Help</text>
-  <text x="2079" y="1373" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="30" fill="#8D6E63">使い方</text>
+  <text x="2079" y="1320" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="90" font-weight="700" fill="#5D4037">Help</text>
+  <text x="2079" y="1400" text-anchor="middle" font-family="-apple-system, 'Hiragino Sans', sans-serif" font-size="52" fill="#8D6E63">使い方</text>
 </svg>

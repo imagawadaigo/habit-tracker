@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { Env, User, UserProfile, Habit, HabitRecord, DailyLog } from '../types';
+import type { Env, User, UserProfile, Habit, HabitRecord, DailyLog, ChatMessage, UserNote } from '../types';
 
 export function getSupabase(env: Env): SupabaseClient {
   return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
@@ -234,4 +234,88 @@ export async function upsertDailyLog(
 
   if (error) throw new Error(`Failed to upsert daily log: ${error.message}`);
   return data as DailyLog;
+}
+
+// === Chat Messages ===
+
+/** 直近の会話履歴を取得（新しい順 → 古い順に反転して返す） */
+export async function getRecentMessages(
+  supabase: SupabaseClient,
+  userId: string,
+  limit: number = 10
+): Promise<ChatMessage[]> {
+  const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+  const { data } = await supabase
+    .from('chat_messages')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('created_at', fiveMinAgo)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  return ((data ?? []) as ChatMessage[]).reverse();
+}
+
+/** 会話メッセージを保存 */
+export async function saveChatMessage(
+  supabase: SupabaseClient,
+  userId: string,
+  role: 'user' | 'assistant',
+  content: string
+): Promise<void> {
+  await supabase.from('chat_messages').insert({
+    user_id: userId,
+    role,
+    content,
+  });
+}
+
+/** 直近N日間の記録を取得 */
+export async function getRecentRecords(
+  supabase: SupabaseClient,
+  userId: string,
+  days: number = 7
+): Promise<HabitRecord[]> {
+  const since = new Date(Date.now() - days * 86400000)
+    .toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+  const { data } = await supabase
+    .from('habit_records')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('date', since)
+    .order('date', { ascending: false });
+  return (data ?? []) as HabitRecord[];
+}
+
+// === User Notes ===
+
+/** ユーザーのメモを全件取得（最新50件） */
+export async function getUserNotes(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<UserNote[]> {
+  const { data } = await supabase
+    .from('user_notes')
+    .select('*')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+    .limit(50);
+  return (data ?? []) as UserNote[];
+}
+
+/** ユーザーメモを保存（重複チェックはAI側で行う前提） */
+export async function saveUserNotes(
+  supabase: SupabaseClient,
+  userId: string,
+  notes: Array<{ category: string; content: string }>
+): Promise<void> {
+  if (notes.length === 0) return;
+  const rows = notes.map(n => ({
+    user_id: userId,
+    category: n.category,
+    content: n.content,
+    source: 'conversation',
+  }));
+  await supabase.from('user_notes').insert(rows);
 }

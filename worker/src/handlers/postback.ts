@@ -1,7 +1,10 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import type { Env, User, UserProfile, LineEvent } from '../types';
 import { replyMessage, textMessage, flexMessage } from '../lib/line';
-import { upsertProfile, getActiveHabits, getTodayRecords } from '../lib/supabase';
+import { upsertProfile, getActiveHabits, getTodayRecords, getRecentRecords, recordHabits } from '../lib/supabase';
+import { buildHabitListFlex } from '../lib/flex';
+import { evaluateStage } from '../lib/stage';
+import { calcRecordXp, grantXp, xpToNextLevel } from '../lib/xp';
 import {
   onboardingQ2, onboardingQ3, onboardingQ4, onboardingQ5, onboardingQ6,
   onboardingResult, onboardingToneSelect, onboardingRhythm, onboardingComplete,
@@ -204,7 +207,6 @@ export async function handlePostback(
 
     case 'menu_record':
     case 'menu_list': {
-      // 習慣一覧 + 記録方法を直接表示
       const habits = await getActiveHabits(supabase, user.id);
       if (habits.length === 0) {
         await replyMessage(env, event.replyToken, [
@@ -213,18 +215,12 @@ export async function handlePostback(
         break;
       }
       const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
-      const records = await getTodayRecords(supabase, user.id, today);
-      const recordMap = new Map(records.map((r) => [r.habit_id, r.status]));
-
-      const lines = habits.map((h, i) => {
-        const status = recordMap.get(h.id);
-        const mark = status === 'achieved' ? '[x]' : status === 'minimum' ? '[/]' : '[ ]';
-        const detail = h.achievement_line ? ` (達成: ${h.achievement_line} / 最低: ${h.minimum_line ?? '-'})` : '';
-        return `${i + 1}. ${mark} ${h.name}${detail}`;
-      });
-
+      const [todayRecs, weekRecs] = await Promise.all([
+        getTodayRecords(supabase, user.id, today),
+        getRecentRecords(supabase, user.id, 7),
+      ]);
       await replyMessage(env, event.replyToken, [
-        textMessage(`今日の習慣 (${today})\n\n${lines.join('\n')}\n\n記録: 番号を送信 (例: 1,2,3m)\nx=達成 / m=最低ライン`),
+        flexMessage('習慣一覧', buildHabitListFlex(habits, todayRecs, weekRecs, today, profile)),
       ]);
       break;
     }
@@ -359,6 +355,47 @@ export async function handlePostback(
         textMessage('プロファイリングをやり直します。\n6つの質問に答えてください。'),
         flexMessage('動機の源泉 (1/2)', onboardingQ1()),
       ]);
+      break;
+    }
+
+    // === Flexからのクイック記録 ===
+
+    case 'quick_record': {
+      const index = parseInt(params.get('index') ?? '0', 10);
+      const status = params.get('status') as 'achieved' | 'minimum';
+      if (!index || !status) break;
+
+      const habits = await getActiveHabits(supabase, user.id);
+      if (index < 1 || index > habits.length) break;
+
+      const habit = habits[index - 1];
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+
+      await recordHabits(supabase, user.id, today, [{ habitId: habit.id, status }]);
+      await evaluateStage(supabase, user.id, habit.id);
+
+      // 更新後のストリーク取得
+      const updatedHabits = await getActiveHabits(supabase, user.id);
+      const updated = updatedHabits.find(h => h.id === habit.id);
+      const streak = updated?.current_streak ?? 0;
+
+      // XP付与
+      const todayRecs = await getTodayRecords(supabase, user.id, today);
+      const allComplete = habits.every(h => todayRecs.some(r => r.habit_id === h.id && (r.status === 'achieved' || r.status === 'minimum')));
+      const xpGained = calcRecordXp([{ status }], [{ streak }], allComplete);
+      const xpResult = await grantXp(supabase, user.id, xpGained);
+
+      const mark = status === 'achieved' ? '[x]' : '[/]';
+      let msg = `${mark} ${habit.name}${streak > 0 ? ` (${streak}d)` : ''}`;
+      msg += `\n+${xpResult.xpGained} XP`;
+      if (xpResult.leveledUp) {
+        msg += ` >> Lv.${xpResult.level} UP!`;
+      }
+      if (allComplete) {
+        msg += '\n\n全習慣達成!';
+      }
+
+      await replyMessage(env, event.replyToken, [textMessage(msg)]);
       break;
     }
   }

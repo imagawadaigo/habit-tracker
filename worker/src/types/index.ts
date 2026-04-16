@@ -4,7 +4,8 @@ export type Env = {
   LINE_CHANNEL_ACCESS_TOKEN: string;
   SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
-  ANTHROPIC_API_KEY: string;
+  ANTHROPIC_API_KEY?: string;
+  GEMINI_API_KEY?: string;
   ENVIRONMENT: string;
 };
 
@@ -55,6 +56,8 @@ export interface UserProfile {
   evening_notify_time: string;
   success_experience: string | null;
   onboarding_step: number;
+  total_xp: number;
+  level: number;
   created_at: string;
   updated_at: string;
 }
@@ -92,6 +95,24 @@ export interface HabitRecord {
   habit_id: string;
   date: string;
   status: 'achieved' | 'minimum' | 'missed';
+  created_at: string;
+}
+
+export interface UserNote {
+  id: string;
+  user_id: string;
+  category: 'preference' | 'lifestyle' | 'relationship' | 'interest' | 'habit_context' | 'other';
+  content: string;
+  source: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  user_id: string;
+  role: 'user' | 'assistant';
+  content: string;
   created_at: string;
 }
 

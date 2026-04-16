@@ -61,6 +61,25 @@ export async function verifySignature(
   return expected === signature;
 }
 
+// ローディングインジケーター（入力中の「...」アニメーション）
+export async function showLoadingAnimation(
+  env: Env,
+  chatId: string
+): Promise<void> {
+  try {
+    await fetch(`${LINE_API_BASE}/chat/loading/start`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.LINE_CHANNEL_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify({ chatId, loadingSeconds: 20 }),
+    });
+  } catch {
+    // ローディング表示失敗は無視
+  }
+}
+
 // テキストメッセージのヘルパー
 export function textMessage(text: string): LineMessage {
   return { type: 'text', text };
