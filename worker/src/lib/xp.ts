@@ -106,6 +106,13 @@ export async function grantXp(
     .update({ total_xp: newXp, level: newLevel })
     .eq('user_id', userId);
 
+  // レベルアップ時に履歴を記録
+  if (newLevel > prevLevel) {
+    await supabase
+      .from('level_up_history')
+      .insert({ user_id: userId, new_level: newLevel, total_xp: newXp });
+  }
+
   return {
     xpGained,
     totalXp: newXp,

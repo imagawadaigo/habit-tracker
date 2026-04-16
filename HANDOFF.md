@@ -110,10 +110,39 @@ habit-tracker/
 
 1. **Gemini thinkingBudget は 128 を維持**。0にすると会話品質が著しく劣化し余計な記号が入る。extractUserInfoのthinkingBudgetだけは0でOK
 2. **LINE Flex Messageのtext fieldは空文字不可**。空になりうる箇所は filler を使う
-3. **reply-first パターン**：handleFreeTextではreplyMessageをDB保存より先に呼び、saveChatMessageは非同期で後処理
-4. **LINE無料プラン月200通**。朝push毎日(30) + 夜push条件付き(~15) + 介入(~5) = 約50通/ユーザー/月。4人で200通
-5. **XP公式**: 必要累計XP = 25 * level * (level - 1)。Lv2=50, Lv3=150, Lv4=300
-6. **月間トラッカー**: 登録日以前のセルは空欄表示、達成率は登録日からの経過日数が母数
+3. **LINE Flex Messageで `paddingTop` / `paddingBottom` 等は box でのみ使用可能**。text / button に付けるとLINE APIが400を返す。代わりに `margin` を使うこと
+4. **reply-first パターン**：handleFreeTextではreplyMessageをDB保存より先に呼び、saveChatMessageは非同期で後処理
+5. **LINE無料プラン月200通**。朝push毎日(30) + 夜push条件付き(~15) + 介入(~5) = 約50通/ユーザー/月。4人で200通
+6. **XP公式**: 必要累計XP = 25 * level * (level - 1)。Lv2=50, Lv3=150, Lv4=300
+7. **月間トラッカー**: 登録日以前のセルは空欄表示、達成率は登録日からの経過日数が母数
+
+---
+
+## 障害記録: 2026-04-16 LINE Bot無反応
+
+### 症状
+「一覧」「今日の記録」等すべてのメッセージに対して既読スルー（無反応）
+
+### 根本原因（2つの複合）
+
+**原因1: LINE_CHANNEL_ACCESS_TOKENの上書き**
+別プロジェクト（Alexa AI Assistant or 入室LINE通知）のデプロイ時に、Cloudflare Workers secretsの `LINE_CHANNEL_ACCESS_TOKEN` が別のLINEチャンネルのトークンで上書きされた。各Workerは独立したsecret空間を持つが、`wrangler secret put` を間違ったディレクトリで実行すると別Workerのsecretが書き変わる。
+
+**原因2: Flex Messageの `paddingTop` プロパティ**
+`flex.ts` の習慣一覧Flex内でtext/boxに `paddingTop: '4px'` を使用していたが、LINE Messaging APIがこれを unknown field として400エラーで拒否。このエラーは `waitUntil` 内の `processEvents` で発生し、catchブロックが `console.error` のみだったため、LINEユーザーには「無反応」として見えた。
+
+### 修正内容
+
+1. 正しいLINE_CHANNEL_ACCESS_TOKENを `wrangler secret put` で再設定
+2. `flex.ts`: `paddingTop` → `margin` に修正（3箇所）
+3. `webhook.ts`: デバッグコード除去、本番コード復元
+4. `postback.ts` / `message.ts`: Flex送信失敗時にユーザーにテキストでエラー通知するcatch追加
+
+### 再発防止策
+
+1. **`wrangler secret put` は必ず対象プロジェクトのディレクトリで実行する**。実行前に `grep name wrangler.toml` でWorker名を確認すること
+2. **Flex Messageの新規プロパティ追加時は [LINE Flex Message Simulator](https://developers.line.biz/flex-simulator/) で事前検証する**。paddingAll/paddingTop等はboxのみ対応、textには margin を使う
+3. **`waitUntil` 内のエラーは必ずユーザーに通知する**。console.errorだけだと「既読スルー」になり原因特定が困難。現在はhandler内のcatchでテキスト返信するようにした
 
 ---
 

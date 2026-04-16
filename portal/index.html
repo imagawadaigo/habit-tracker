@@ -210,23 +210,59 @@
     .habit-rate-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.3s; }
     .habit-rate-pct { font-size: 13px; font-weight: 700; color: var(--primary); width: 40px; text-align: right; }
 
-    /* Daily Log */
-    .log-card { margin-bottom: 12px; }
-    .log-date { font-size: 12px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
-    .log-field { font-size: 13px; margin-bottom: 6px; line-height: 1.5; }
-    .log-label { font-weight: 600; color: var(--text-light); font-size: 11px; display: inline-block; min-width: 20px; }
+    /* Review Tabs */
+    .review-tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--card); border-radius: 10px; padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .review-tab { flex: 1; padding: 8px 0; text-align: center; font-size: 13px; font-weight: 600; border: none; background: none; border-radius: 8px; cursor: pointer; color: var(--text-light); transition: all 0.15s; }
+    .review-tab.active { background: var(--primary); color: white; }
+    .review-panel { display: none; }
+    .review-panel.active { display: block; }
+    .review-date-nav { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px; }
+    .review-date-nav button { background: none; border: none; font-size: 20px; color: var(--primary); cursor: pointer; padding: 4px 12px; }
+    .review-date-nav span { font-size: 15px; font-weight: 700; color: var(--text); min-width: 140px; text-align: center; }
 
-    /* Highlight Timeline */
-    .month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .month-nav button { background: none; border: none; color: var(--primary); font-size: 20px; cursor: pointer; padding: 4px 12px; }
-    .month-nav .month-label { font-size: 15px; font-weight: 700; color: var(--text); }
-    .highlight-timeline { position: relative; padding-left: 20px; }
-    .highlight-day { position: relative; margin-bottom: 16px; }
-    .highlight-day::before { content: ''; position: absolute; left: -16px; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
-    .highlight-day::after { content: ''; position: absolute; left: -13px; top: 18px; bottom: -16px; width: 2px; background: var(--border); }
-    .highlight-day:last-child::after { display: none; }
-    .highlight-day-date { font-size: 11px; color: var(--text-light); font-weight: 600; margin-bottom: 2px; }
-    .highlight-day-text { font-size: 13px; line-height: 1.6; white-space: pre-line; }
+    /* Review Cards */
+    .review-stat-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .review-stat { flex: 1; background: var(--card); border-radius: 10px; padding: 12px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .review-stat-num { font-size: 22px; font-weight: 800; color: var(--primary); }
+    .review-stat-label { font-size: 10px; color: var(--text-light); margin-top: 2px; }
+
+    .review-habit-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .review-habit-row:last-child { border-bottom: none; }
+    .review-habit-info { flex: 1; }
+    .review-habit-name { font-size: 13px; font-weight: 600; }
+    .review-habit-detail { font-size: 11px; color: var(--text-light); }
+
+    .review-highlight { position: relative; padding-left: 20px; }
+    .review-hl-item { position: relative; margin-bottom: 14px; }
+    .review-hl-item::before { content: ''; position: absolute; left: -16px; top: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+    .review-hl-item::after { content: ''; position: absolute; left: -13px; top: 18px; bottom: -14px; width: 2px; background: var(--border); }
+    .review-hl-item:last-child::after { display: none; }
+    .review-hl-date { font-size: 11px; color: var(--text-light); font-weight: 600; margin-bottom: 2px; }
+    .review-hl-text { font-size: 13px; line-height: 1.6; white-space: pre-line; }
+
+    /* Level Up History */
+    .level-history-item { display: flex; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .level-history-item:last-child { border-bottom: none; }
+    .level-badge { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #FF8A65, #E64A19); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; margin-right: 10px; flex-shrink: 0; }
+    .level-history-info { flex: 1; }
+    .level-history-date { font-size: 11px; color: var(--text-light); }
+    .level-history-xp { font-size: 12px; color: var(--primary); font-weight: 600; }
+
+    /* Week bar chart */
+    .week-bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 80px; margin-bottom: 8px; }
+    .week-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; }
+    .week-bar { width: 100%; border-radius: 4px 4px 0 0; background: var(--primary); min-height: 2px; transition: height 0.3s; }
+    .week-bar-label { font-size: 10px; color: var(--text-light); margin-top: 4px; }
+
+    /* Month calendar mini */
+    .month-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 12px; }
+    .month-cal-header { font-size: 10px; color: var(--text-light); text-align: center; font-weight: 600; padding: 4px 0; }
+    .month-cal-cell { aspect-ratio: 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text); }
+    .month-cal-cell.empty { background: transparent; }
+    .month-cal-cell.rate-0 { background: var(--missed); }
+    .month-cal-cell.rate-low { background: #FFE0B2; }
+    .month-cal-cell.rate-mid { background: var(--minimum); }
+    .month-cal-cell.rate-high { background: var(--achieved); color: white; }
 
     /* Forms */
     .form-group { margin-bottom: 12px; }
@@ -428,6 +464,10 @@
           <button class="btn" id="save-records-btn" style="display:none">記録を保存</button>
         </div>
       </div>
+      <div class="card" id="level-history-card" style="display:none">
+        <div class="card-title">Level Up History</div>
+        <div id="level-history-list"></div>
+      </div>
     </div>
 
     <!-- Habits Management -->
@@ -457,50 +497,43 @@
       </div>
     </div>
 
-    <!-- Daily Logs -->
+    <!-- Review (振り返り) -->
     <div class="section" id="sec-logs">
-      <div class="card">
-        <div class="card-title">New Entry</div>
-        <form id="log-form">
-          <div class="form-group">
-            <label>Date</label>
-            <input type="date" class="form-input" id="log-date" required>
-          </div>
-          <div class="form-group">
-            <label>Focus (今日の焦点)</label>
-            <input type="text" class="form-input" id="log-focus" placeholder="今日最も注力すること">
-          </div>
-          <div class="form-group">
-            <label>Highlight (今日のハイライト)</label>
-            <input type="text" class="form-input" id="log-highlight" placeholder="印象に残った出来事">
-          </div>
-          <div class="form-group">
-            <label>Keep (続けること)</label>
-            <textarea class="form-input" id="log-keep" rows="2" placeholder="うまくいったこと、続けたいこと"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Problem (課題)</label>
-            <textarea class="form-input" id="log-problem" rows="2" placeholder="うまくいかなかったこと"></textarea>
-          </div>
-          <div class="form-group">
-            <label>Try (次に試すこと)</label>
-            <textarea class="form-input" id="log-try" rows="2" placeholder="改善のためにやってみること"></textarea>
-          </div>
-          <button type="submit" class="btn">保存</button>
-        </form>
+      <!-- 日次/週次/月次 切り替えタブ -->
+      <div class="review-tabs">
+        <button class="review-tab active" data-review="daily">日次</button>
+        <button class="review-tab" data-review="weekly">週次</button>
+        <button class="review-tab" data-review="monthly">月次</button>
       </div>
-      <div class="card">
-        <div class="card-title">Highlights</div>
-        <div class="month-nav">
-          <button id="hl-prev">&lt;</button>
-          <span class="month-label" id="hl-month-label"></span>
-          <button id="hl-next">&gt;</button>
+
+      <!-- 日次振り返り -->
+      <div class="review-panel active" id="review-daily">
+        <div class="review-date-nav">
+          <button id="daily-prev">&lt;</button>
+          <span id="daily-date-label"></span>
+          <button id="daily-next">&gt;</button>
         </div>
-        <div id="highlight-timeline"></div>
+        <div id="daily-content"><div class="loading">読み込み中...</div></div>
       </div>
-      <div class="card">
-        <div class="card-title">All Logs</div>
-        <div id="past-logs"></div>
+
+      <!-- 週次振り返り -->
+      <div class="review-panel" id="review-weekly">
+        <div class="review-date-nav">
+          <button id="weekly-prev">&lt;</button>
+          <span id="weekly-date-label"></span>
+          <button id="weekly-next">&gt;</button>
+        </div>
+        <div id="weekly-content"><div class="loading">読み込み中...</div></div>
+      </div>
+
+      <!-- 月次振り返り -->
+      <div class="review-panel" id="review-monthly">
+        <div class="review-date-nav">
+          <button id="monthly-prev">&lt;</button>
+          <span id="monthly-date-label"></span>
+          <button id="monthly-next">&gt;</button>
+        </div>
+        <div id="monthly-content"><div class="loading">読み込み中...</div></div>
       </div>
     </div>
 
@@ -529,7 +562,7 @@
     </button>
     <button class="nav-item" data-tab="logs">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-      Log
+      Review
     </button>
     <button class="nav-item" data-tab="profile">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -735,10 +768,11 @@ function renderLevelCard(profile) {
 async function loadDashboard() {
   const today = toDateStr(new Date());
 
-  const [habitsData, recordsData, profileData] = await Promise.all([
+  const [habitsData, recordsData, profileData, levelHistory] = await Promise.all([
     api('/habits'),
     api(`/records?date=${today}`),
     api('/profile'),
+    api('/level-history'),
   ]);
 
   habits = habitsData;
@@ -760,6 +794,25 @@ async function loadDashboard() {
     <div class="stat-box"><div class="stat-number">${maxStreak}</div><div class="stat-label">Best Streak</div></div>
     <div class="stat-box"><div class="stat-number">${total}</div><div class="stat-label">Habits</div></div>
   `;
+
+  // Level up history
+  const historyCard = document.getElementById('level-history-card');
+  const historyList = document.getElementById('level-history-list');
+  if (levelHistory && levelHistory.length > 0) {
+    historyCard.style.display = 'block';
+    historyList.innerHTML = levelHistory.slice().reverse().slice(0, 5).map(l => {
+      const dd = new Date(l.created_at);
+      return `<div class="level-history-item">
+        <div class="level-badge">Lv.${l.new_level}</div>
+        <div class="level-history-info">
+          <div class="level-history-xp">${l.total_xp} XP</div>
+          <div class="level-history-date">${dd.getFullYear()}/${dd.getMonth()+1}/${dd.getDate()}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    historyCard.style.display = 'none';
+  }
 
   renderTodayHabits();
 }
@@ -1060,98 +1113,218 @@ document.getElementById('next-month').addEventListener('click', () => {
 });
 
 // =============================================
-// Daily Logs
+// Review (振り返り)
 // =============================================
-document.getElementById('log-date').value = toDateStr(new Date());
+const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+let reviewDate = new Date();
+let reviewWeek = new Date();
+let reviewMonth = new Date();
 
-document.getElementById('log-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const btn = e.target.querySelector('button[type="submit"]');
-  btn.disabled = true;
-  btn.textContent = '保存中...';
-
-  const payload = {
-    date: document.getElementById('log-date').value,
-    focus: document.getElementById('log-focus').value || null,
-    highlight: document.getElementById('log-highlight').value || null,
-    kpt_keep: document.getElementById('log-keep').value || null,
-    kpt_problem: document.getElementById('log-problem').value || null,
-    kpt_try: document.getElementById('log-try').value || null,
-  };
-
-  await api('/logs', { method: 'POST', body: JSON.stringify(payload) });
-  document.getElementById('log-form').reset();
-  document.getElementById('log-date').value = toDateStr(new Date());
-  btn.disabled = false;
-  btn.textContent = '保存';
-  await loadLogs();
+// Review tab switching
+document.querySelectorAll('.review-tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.review-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.review-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`review-${btn.dataset.review}`).classList.add('active');
+    if (btn.dataset.review === 'daily') loadDailyReview();
+    if (btn.dataset.review === 'weekly') loadWeeklyReview();
+    if (btn.dataset.review === 'monthly') loadMonthlyReview();
+  });
 });
 
-// Highlight month navigation
-let hlMonth = new Date();
-hlMonth.setDate(1);
+// === Daily Review ===
+document.getElementById('daily-prev').addEventListener('click', () => { reviewDate.setDate(reviewDate.getDate() - 1); loadDailyReview(); });
+document.getElementById('daily-next').addEventListener('click', () => { reviewDate.setDate(reviewDate.getDate() + 1); loadDailyReview(); });
 
-function formatMonth(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+async function loadDailyReview() {
+  const dateStr = toDateStr(reviewDate);
+  const d = new Date(dateStr + 'T00:00:00+09:00');
+  document.getElementById('daily-date-label').textContent = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (${dayNames[d.getDay()]})`;
+
+  const container = document.getElementById('daily-content');
+  container.innerHTML = '<div class="loading">読み込み中...</div>';
+
+  try {
+    const data = await api(`/review/daily?date=${dateStr}`);
+    let html = '';
+
+    // 習慣達成状況
+    if (data.habits && data.habits.length > 0) {
+      const done = data.habits.filter(h => h.status === 'achieved' || h.status === 'minimum').length;
+      html += `<div class="card"><div class="card-title">習慣 ${done}/${data.habits.length}</div>`;
+      html += data.habits.map(h => {
+        const icon = h.status === 'achieved' ? '<span style="color:var(--achieved)">O</span>' : h.status === 'minimum' ? '<span style="color:var(--minimum)">-</span>' : '<span style="color:var(--text-light)">--</span>';
+        return `<div class="review-habit-row">
+          <div class="review-habit-info"><div class="review-habit-name">${esc(h.name)}</div></div>
+          <div style="font-weight:700;font-size:16px">${icon}</div>
+        </div>`;
+      }).join('');
+      html += '</div>';
+    }
+
+    // ログ
+    if (data.log?.highlight) {
+      html += `<div class="card"><div class="card-title">Log</div><div style="font-size:13px;line-height:1.7;white-space:pre-line">${esc(data.log.highlight)}</div></div>`;
+    }
+    if (data.log?.focus) {
+      html += `<div class="card"><div class="card-title">Focus</div><div style="font-size:13px">${esc(data.log.focus)}</div></div>`;
+    }
+
+    if (!html) html = '<div class="card"><div class="loading">この日の記録はありません</div></div>';
+    container.innerHTML = html;
+  } catch { container.innerHTML = '<div class="card"><div class="loading">読み込みに失敗しました</div></div>'; }
 }
-function formatMonthLabel(d) {
-  return `${d.getFullYear()}年${d.getMonth() + 1}月`;
-}
 
-document.getElementById('hl-prev').addEventListener('click', () => {
-  hlMonth.setMonth(hlMonth.getMonth() - 1);
-  loadHighlights();
-});
-document.getElementById('hl-next').addEventListener('click', () => {
-  hlMonth.setMonth(hlMonth.getMonth() + 1);
-  loadHighlights();
-});
+// === Weekly Review ===
+document.getElementById('weekly-prev').addEventListener('click', () => { reviewWeek.setDate(reviewWeek.getDate() - 7); loadWeeklyReview(); });
+document.getElementById('weekly-next').addEventListener('click', () => { reviewWeek.setDate(reviewWeek.getDate() + 7); loadWeeklyReview(); });
 
-async function loadHighlights() {
-  document.getElementById('hl-month-label').textContent = formatMonthLabel(hlMonth);
-  const container = document.getElementById('highlight-timeline');
-  const logs = await api(`/logs/month?month=${formatMonth(hlMonth)}`);
-  const withHL = (logs ?? []).filter(l => l.highlight);
+async function loadWeeklyReview() {
+  const dateStr = toDateStr(reviewWeek);
+  document.getElementById('weekly-date-label').textContent = `${dateStr} の週`;
 
-  if (withHL.length === 0) {
-    container.innerHTML = '<div class="loading">この月のハイライトはありません</div>';
-    return;
-  }
+  const container = document.getElementById('weekly-content');
+  container.innerHTML = '<div class="loading">読み込み中...</div>';
 
-  const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
-  container.innerHTML = '<div class="highlight-timeline">' + withHL.map(l => {
-    const d = new Date(l.date + 'T00:00:00+09:00');
-    const dayLabel = `${parseInt(l.date.split('-')[2])}日 (${dayNames[d.getDay()]})`;
-    return `<div class="highlight-day">
-      <div class="highlight-day-date">${dayLabel}</div>
-      <div class="highlight-day-text">${esc(l.highlight)}</div>
+  try {
+    const data = await api(`/review/weekly?week=${dateStr}`);
+    let html = '';
+
+    // 全体達成率
+    html += `<div class="review-stat-row">
+      <div class="review-stat"><div class="review-stat-num">${data.overallRate}%</div><div class="review-stat-label">達成率</div></div>
     </div>`;
-  }).join('') + '</div>';
+
+    // 日別バーチャート
+    if (data.dailySummary) {
+      html += '<div class="card"><div class="card-title">日別達成</div><div class="week-bar-chart">';
+      const maxTotal = Math.max(...data.dailySummary.map(d => d.total), 1);
+      html += data.dailySummary.map(d => {
+        const h = d.total > 0 ? Math.round((d.achieved + d.minimum) / d.total * 70) : 0;
+        const dd = new Date(d.date + 'T00:00:00+09:00');
+        return `<div class="week-bar-col"><div class="week-bar" style="height:${Math.max(2, h)}px"></div><div class="week-bar-label">${dayNames[dd.getDay()]}</div></div>`;
+      }).join('');
+      html += '</div></div>';
+    }
+
+    // 習慣別サマリー
+    if (data.habitSummary && data.habitSummary.length > 0) {
+      html += '<div class="card"><div class="card-title">習慣別</div>';
+      html += data.habitSummary.map(h => `<div class="review-habit-row">
+        <div class="review-habit-info">
+          <div class="review-habit-name">${esc(h.name)}</div>
+          <div class="review-habit-detail">${h.achieved + h.minimum}/7日 | streak: ${h.current_streak}d (max: ${h.max_streak}d)</div>
+        </div>
+        <div class="habit-rate-pct">${h.rate}%</div>
+      </div>`).join('');
+      html += '</div>';
+    }
+
+    // ハイライト
+    if (data.highlights && data.highlights.length > 0) {
+      html += '<div class="card"><div class="card-title">Highlights</div><div class="review-highlight">';
+      html += data.highlights.map(h => {
+        const dd = new Date(h.date + 'T00:00:00+09:00');
+        return `<div class="review-hl-item"><div class="review-hl-date">${parseInt(h.date.split('-')[2])}日 (${dayNames[dd.getDay()]})</div><div class="review-hl-text">${esc(h.highlight)}</div></div>`;
+      }).join('');
+      html += '</div></div>';
+    }
+
+    container.innerHTML = html || '<div class="card"><div class="loading">この週の記録はありません</div></div>';
+  } catch { container.innerHTML = '<div class="card"><div class="loading">読み込みに失敗しました</div></div>'; }
+}
+
+// === Monthly Review ===
+document.getElementById('monthly-prev').addEventListener('click', () => { reviewMonth.setMonth(reviewMonth.getMonth() - 1); loadMonthlyReview(); });
+document.getElementById('monthly-next').addEventListener('click', () => { reviewMonth.setMonth(reviewMonth.getMonth() + 1); loadMonthlyReview(); });
+
+async function loadMonthlyReview() {
+  const monthStr = `${reviewMonth.getFullYear()}-${String(reviewMonth.getMonth() + 1).padStart(2, '0')}`;
+  document.getElementById('monthly-date-label').textContent = `${reviewMonth.getFullYear()}年${reviewMonth.getMonth() + 1}月`;
+
+  const container = document.getElementById('monthly-content');
+  container.innerHTML = '<div class="loading">読み込み中...</div>';
+
+  try {
+    const data = await api(`/review/monthly?month=${monthStr}`);
+    let html = '';
+
+    // 全体達成率 + レベルアップ回数
+    const lvUps = data.levelUps?.length ?? 0;
+    html += `<div class="review-stat-row">
+      <div class="review-stat"><div class="review-stat-num">${data.overallRate}%</div><div class="review-stat-label">達成率</div></div>
+      <div class="review-stat"><div class="review-stat-num">${lvUps}</div><div class="review-stat-label">Level Up</div></div>
+    </div>`;
+
+    // カレンダーヒートマップ
+    if (data.calendar) {
+      const year = reviewMonth.getFullYear();
+      const month = reviewMonth.getMonth();
+      const firstDay = new Date(year, month, 1).getDay(); // 0=日
+      html += '<div class="card"><div class="card-title">カレンダー</div><div class="month-cal-grid">';
+      html += dayNames.map(d => `<div class="month-cal-header">${d}</div>`).join('');
+      // 空セル
+      for (let i = 0; i < firstDay; i++) html += '<div class="month-cal-cell empty"></div>';
+      // 日セル
+      data.calendar.forEach(c => {
+        const day = parseInt(c.date.split('-')[2]);
+        let cls = 'month-cal-cell';
+        if (c.total === 0) cls += ' empty';
+        else if (c.rate === 0) cls += ' rate-0';
+        else if (c.rate < 50) cls += ' rate-low';
+        else if (c.rate < 100) cls += ' rate-mid';
+        else cls += ' rate-high';
+        html += `<div class="${cls}">${day}</div>`;
+      });
+      html += '</div></div>';
+    }
+
+    // 習慣別サマリー
+    if (data.habitSummary && data.habitSummary.length > 0) {
+      html += '<div class="card"><div class="card-title">習慣別</div>';
+      html += data.habitSummary.map(h => `<div class="review-habit-row">
+        <div class="review-habit-info">
+          <div class="review-habit-name">${esc(h.name)}</div>
+          <div class="review-habit-detail">${h.achieved + h.minimum}/${h.eligibleDays}日 | streak: ${h.current_streak}d (max: ${h.max_streak}d)</div>
+        </div>
+        <div class="habit-rate-pct">${h.rate}%</div>
+      </div>`).join('');
+      html += '</div>';
+    }
+
+    // ハイライト
+    if (data.highlights && data.highlights.length > 0) {
+      html += '<div class="card"><div class="card-title">Highlights</div><div class="review-highlight">';
+      html += data.highlights.map(h => {
+        const dd = new Date(h.date + 'T00:00:00+09:00');
+        return `<div class="review-hl-item"><div class="review-hl-date">${parseInt(h.date.split('-')[2])}日 (${dayNames[dd.getDay()]})</div><div class="review-hl-text">${esc(h.highlight)}</div></div>`;
+      }).join('');
+      html += '</div></div>';
+    }
+
+    // レベルアップ履歴
+    if (data.levelUps && data.levelUps.length > 0) {
+      html += '<div class="card"><div class="card-title">Level Up History</div>';
+      html += data.levelUps.map(l => {
+        const dd = new Date(l.date);
+        return `<div class="level-history-item">
+          <div class="level-badge">Lv.${l.level}</div>
+          <div class="level-history-info">
+            <div class="level-history-xp">${l.xp} XP</div>
+            <div class="level-history-date">${dd.getFullYear()}/${dd.getMonth()+1}/${dd.getDate()}</div>
+          </div>
+        </div>`;
+      }).join('');
+      html += '</div>';
+    }
+
+    container.innerHTML = html || '<div class="card"><div class="loading">この月の記録はありません</div></div>';
+  } catch { container.innerHTML = '<div class="card"><div class="loading">読み込みに失敗しました</div></div>'; }
 }
 
 async function loadLogs() {
-  // ハイライトタイムライン
-  await loadHighlights();
-
-  // All Logs (直近14件)
-  const logs = await api('/logs?limit=14');
-  const container = document.getElementById('past-logs');
-
-  if (!logs || logs.length === 0) {
-    container.innerHTML = '<div class="loading">ログがありません</div>';
-    return;
-  }
-
-  container.innerHTML = logs.map(log => `
-    <div class="log-card">
-      <div class="log-date">${log.date}</div>
-      ${log.focus ? `<div class="log-field"><span class="log-label">Focus</span> ${esc(log.focus)}</div>` : ''}
-      ${log.highlight ? `<div class="log-field"><span class="log-label">Highlight</span> ${esc(log.highlight)}</div>` : ''}
-      ${log.kpt_keep ? `<div class="log-field"><span class="log-label">K</span> ${esc(log.kpt_keep)}</div>` : ''}
-      ${log.kpt_problem ? `<div class="log-field"><span class="log-label">P</span> ${esc(log.kpt_problem)}</div>` : ''}
-      ${log.kpt_try ? `<div class="log-field"><span class="log-label">T</span> ${esc(log.kpt_try)}</div>` : ''}
-    </div>
-  `).join('');
+  loadDailyReview();
 }
 
 // =============================================

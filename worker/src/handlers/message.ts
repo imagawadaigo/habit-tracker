@@ -39,6 +39,24 @@ export async function handleTextMessage(
   // コマンドパース
   const lower = text.toLowerCase();
 
+  // コマンド実行時はログ入力待ちをクリア
+  const isCommand = lower.startsWith('追加 ') || lower.startsWith('add ') ||
+    lower.startsWith('削除 ') || lower.startsWith('delete ') ||
+    lower === '一覧' || lower === 'list' ||
+    lower === 'リセット' || lower === 'reset' ||
+    lower === 'プロファイルリセット' ||
+    lower === '設定' || lower === 'settings' ||
+    lower === 'ヘルプ' || lower === 'help' ||
+    lower.startsWith('ログ ') || lower.startsWith('log ') ||
+    /^[\d,mM\s]+$/.test(text);
+
+  if (isCommand && profile?.pending_action) {
+    await supabase
+      .from('user_profiles')
+      .update({ pending_action: null })
+      .eq('user_id', user.id);
+  }
+
   if (lower.startsWith('追加 ') || lower.startsWith('add ')) {
     const name = text.replace(/^(追加|add)\s+/i, '').trim();
     await handleAddHabit(env, supabase, user, event, name);
@@ -93,6 +111,17 @@ export async function handleTextMessage(
   if (lower.startsWith('ログ ') || lower.startsWith('log ')) {
     const content = text.replace(/^(ログ|log)\s+/i, '').trim();
     await handleOneLineLog(env, supabase, user, event, content);
+    return;
+  }
+
+  // ログ入力待ちモード: menu_recordから来たフリーテキストを日記として保存
+  if (profile?.pending_action === 'log_input') {
+    // pending_actionをクリア
+    await supabase
+      .from('user_profiles')
+      .update({ pending_action: null })
+      .eq('user_id', user.id);
+    await handleOneLineLog(env, supabase, user, event, text);
     return;
   }
 

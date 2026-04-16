@@ -58,6 +58,7 @@ export interface UserProfile {
   onboarding_step: number;
   total_xp: number;
   level: number;
+  pending_action: string | null;
   created_at: string;
   updated_at: string;
 }

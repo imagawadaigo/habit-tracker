@@ -205,7 +205,136 @@ export async function handlePostback(
 
     // === リッチメニューからの操作 ===
 
-    case 'menu_record':
+    case 'menu_record': {
+      // 今日の記録 → Flex表示 + ログ入力待ちモード
+      const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Tokyo' });
+      const jstNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Tokyo' }));
+      const hour = jstNow.getHours();
+
+      // 今日のログを取得
+      const { data: todayLog } = await supabase
+        .from('daily_logs')
+        .select('highlight')
+        .eq('user_id', user.id)
+        .eq('date', today)
+        .single();
+
+      // 今日の習慣達成状況
+      const habits = await getActiveHabits(supabase, user.id);
+      const todayRecs = await getTodayRecords(supabase, user.id, today);
+      const doneCount = habits.filter(h => todayRecs.some(r => r.habit_id === h.id && (r.status === 'achieved' || r.status === 'minimum'))).length;
+
+      // 時間帯別の声かけ
+      let greeting: string;
+      if (hour < 10) {
+        greeting = 'おはよ。今日はどんな1日にする？';
+      } else if (hour < 14) {
+        greeting = '午前中どうだった？';
+      } else if (hour < 18) {
+        greeting = '午後の調子はどう？';
+      } else {
+        greeting = '今日はどんな1日だった？';
+      }
+
+      // ログ入力待ちモードをセット
+      await supabase
+        .from('user_profiles')
+        .update({ pending_action: 'log_input' })
+        .eq('user_id', user.id);
+
+      // Flex Message構築
+      const logEntries = todayLog?.highlight ? todayLog.highlight.split('\n').filter(Boolean) : [];
+      const hasLog = logEntries.length > 0;
+
+      const bodyContents: Record<string, unknown>[] = [];
+
+      // 習慣進捗
+      if (habits.length > 0) {
+        bodyContents.push({
+          type: 'box',
+          layout: 'horizontal',
+          contents: [
+            { type: 'text', text: '習慣', size: 'xs', color: '#8D6E63', flex: 2 },
+            { type: 'text', text: `${doneCount}/${habits.length} 達成`, size: 'xs', color: doneCount === habits.length ? '#4CAF50' : '#FF8A65', align: 'end', flex: 3, weight: 'bold' },
+          ],
+        });
+      }
+
+      // 今日のログ表示
+      if (hasLog) {
+        bodyContents.push({
+          type: 'separator',
+          margin: 'md',
+        });
+        bodyContents.push({
+          type: 'text',
+          text: '今日のログ',
+          size: 'xs',
+          color: '#8D6E63',
+          margin: 'md',
+          weight: 'bold',
+        });
+        for (const entry of logEntries.slice(0, 5)) {
+          bodyContents.push({
+            type: 'text',
+            text: entry,
+            size: 'sm',
+            color: '#4E342E',
+            wrap: true,
+            margin: 'sm',
+          });
+        }
+        if (logEntries.length > 5) {
+          bodyContents.push({
+            type: 'text',
+            text: `...他 ${logEntries.length - 5}件`,
+            size: 'xxs',
+            color: '#AAAAAA',
+            margin: 'sm',
+          });
+        }
+      }
+
+      // 入力促しテキスト
+      bodyContents.push({
+        type: 'separator',
+        margin: 'md',
+      });
+      bodyContents.push({
+        type: 'text',
+        text: hasLog ? '追記したいことをそのまま送ってね' : 'ひとこと送ってくれたら日記に記録するよ',
+        size: 'xs',
+        color: '#FF8A65',
+        margin: 'md',
+        align: 'center',
+      });
+
+      const flexContent = {
+        type: 'bubble',
+        size: 'kilo',
+        header: {
+          type: 'box',
+          layout: 'vertical',
+          contents: [
+            { type: 'text', text: greeting, size: 'sm', color: '#4E342E', wrap: true },
+          ],
+          paddingAll: 'lg',
+          backgroundColor: '#FFF8F0',
+        },
+        body: {
+          type: 'box',
+          layout: 'vertical',
+          contents: bodyContents,
+          paddingAll: 'lg',
+        },
+      };
+
+      await replyMessage(env, event.replyToken, [
+        flexMessage('今日の記録', flexContent),
+      ]);
+      break;
+    }
+
     case 'menu_list': {
       try {
         const habits = await getActiveHabits(supabase, user.id);
