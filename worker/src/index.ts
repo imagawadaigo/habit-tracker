@@ -10,6 +10,61 @@ const app = new Hono<{ Bindings: Env }>();
 // ヘルスチェック
 app.get('/health', (c) => c.json({ status: 'ok', bot: 'riz-habit-bot' }));
 
+// Anthropic診断エンドポイント — API keyの有効性を確認する
+app.get('/api/diag/anthropic', async (c) => {
+  const key = c.env.ANTHROPIC_API_KEY;
+  if (!key) return c.json({ ok: false, reason: 'ANTHROPIC_API_KEY not set' });
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 20,
+      messages: [{ role: 'user', content: 'ping' }],
+    }),
+  });
+
+  const body = await res.text();
+  return c.json({
+    ok: res.ok,
+    status: res.status,
+    body: body.slice(0, 1000),
+    key_prefix: key.slice(0, 12) + '...',
+  });
+});
+
+// Gemini診断エンドポイント — API keyの有効性を確認する
+app.get('/api/diag/gemini', async (c) => {
+  const key = c.env.GEMINI_API_KEY;
+  if (!key) return c.json({ ok: false, reason: 'GEMINI_API_KEY not set' });
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'ping' }] }],
+        generationConfig: { maxOutputTokens: 20, temperature: 0.5 },
+      }),
+    }
+  );
+
+  const body = await res.text();
+  return c.json({
+    ok: res.ok,
+    status: res.status,
+    body: body.slice(0, 1000),
+    key_prefix: key.slice(0, 8) + '...',
+    key_length: key.length,
+  });
+});
+
 // LINE Webhook
 app.post('/webhook', webhook);
 

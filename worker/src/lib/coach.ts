@@ -25,18 +25,22 @@ export async function getCoachResponse(
 
   let raw: string | null = null;
 
-  // 1. Gemini を試行
-  if (env.GEMINI_API_KEY) {
+  // 1. Anthropic Haiku 4.5 を主プロバイダとして試行
+  if (env.ANTHROPIC_API_KEY) {
+    raw = await callAnthropic(env, systemPrompt, messages);
+  } else {
+    console.error('[getCoachResponse] ANTHROPIC_API_KEY not set');
+  }
+
+  // 2. Gemini フォールバック（Anthropic失敗時のみ）
+  if (!raw && env.GEMINI_API_KEY) {
+    console.error('[getCoachResponse] anthropic failed, trying gemini');
     raw = await callGemini(env, systemPrompt, messages);
   }
 
-  // 2. Anthropic フォールバック
-  if (!raw && env.ANTHROPIC_API_KEY) {
-    raw = await callAnthropic(env, systemPrompt, messages);
-  }
-
-  // 3. 全て失敗 → テンプレート応答
+  // 3. 全て失敗 → 機能案内を含むテンプレート応答
   if (!raw) {
+    console.error('[getCoachResponse] all providers failed, returning fallback. messages=', JSON.stringify(messages).slice(0, 300));
     return [getHardcodedFallback(ctx.profile?.coach_tone ?? 'polite')];
   }
 
@@ -91,11 +95,18 @@ async function callGemini(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<string | null> {
   try {
-    // Gemini の contents 形式に変換
-    const contents = messages.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }],
-    }));
+    // Gemini の contents 形式に変換（空contentを除外 — LINE reply後のedgeケース対策）
+    const contents = messages
+      .filter(m => m.content && m.content.trim().length > 0)
+      .map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }));
+
+    if (contents.length === 0) {
+      console.error('[callGemini] empty contents after filtering');
+      return null;
+    }
 
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
@@ -113,13 +124,27 @@ async function callGemini(
         }),
       }
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      console.error('[callGemini] http error', res.status, errBody.slice(0, 500));
+      return null;
+    }
 
     const data = await res.json() as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> }; finishReason?: string }>;
+      promptFeedback?: { blockReason?: string };
     };
-    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
-  } catch {
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!text) {
+      console.error('[callGemini] empty text',
+        'finishReason=', data.candidates?.[0]?.finishReason,
+        'blockReason=', data.promptFeedback?.blockReason,
+        'raw=', JSON.stringify(data).slice(0, 500));
+      return null;
+    }
+    return text;
+  } catch (err) {
+    console.error('[callGemini] exception', err instanceof Error ? err.message : String(err));
     return null;
   }
 }
@@ -130,6 +155,12 @@ async function callAnthropic(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>
 ): Promise<string | null> {
   try {
+    const cleaned = messages.filter(m => m.content && m.content.trim().length > 0);
+    if (cleaned.length === 0) {
+      console.error('[callAnthropic] empty messages after filtering');
+      return null;
+    }
+
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -141,16 +172,26 @@ async function callAnthropic(
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 800,
         system: systemPrompt,
-        messages,
+        messages: cleaned,
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      console.error('[callAnthropic] http error', res.status, errBody.slice(0, 500));
+      return null;
+    }
 
     const data = await res.json() as {
       content?: Array<{ type: string; text: string }>;
     };
-    return data.content?.[0]?.text?.trim() || null;
-  } catch {
+    const text = data.content?.[0]?.text?.trim();
+    if (!text) {
+      console.error('[callAnthropic] empty text, raw=', JSON.stringify(data).slice(0, 500));
+      return null;
+    }
+    return text;
+  } catch (err) {
+    console.error('[callAnthropic] exception', err instanceof Error ? err.message : String(err));
     return null;
   }
 }
@@ -307,11 +348,20 @@ ${logInfo ? `ログ: ${logInfo}` : ''}
 }
 
 function getHardcodedFallback(tone: string): string {
+  // AI会話プロバイダが全滅した際のテンプレ。
+  // 「返せなかった」だけだと何もできないので、テキストコマンドで動く機能を案内する。
+  const menu = '記録は「1」「2m」、一覧は「一覧」、日記は「ログ ○○」で動くよ。';
   switch (tone) {
-    case 'frank': return 'ごめん、ちょっと頭が回らなかった。もう一回言ってくれる？';
-    case 'aniki': return 'すまん、うまく返せなかった。もう一度頼む。';
-    case 'neutral': return '申し訳ありません、応答に失敗しました。再度お願いします。';
-    default: return 'すみません、うまく応答できませんでした。もう一度お願いできますか？';
+    case 'frank':
+      return `ごめん、今ちょっと調子悪くて返せない。少し時間おいてからまた話しかけて。\n${menu}`;
+    case 'aniki':
+      return `すまん、今AI側が落ちてる。少し待ってからまた頼む。\n${menu}`;
+    case 'neutral':
+      return `現在AI応答が利用できません。少し時間をおいて再送してください。\n${menu}`;
+    case 'tough':
+      return `今AI側が止まってる。記録や一覧は動く。少し経ってから話しかけろ。\n${menu}`;
+    default:
+      return `すみません、今AIの応答が止まっています。少し時間をおいてからまた話しかけてください。\n${menu}`;
   }
 }
 

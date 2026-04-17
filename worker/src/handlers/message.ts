@@ -685,14 +685,19 @@ async function handleFreeText(
     userNotes,
   }, text);
 
-  // 返答を最優先で送信（速度改善）
-  await replyMessage(env, event.replyToken, responses.map(r => textMessage(r)));
-
-  // DB保存は返答後に非同期実行（ユーザー体感を妨げない）
   const assistantText = responses.join('\n\n');
-  saveChatMessage(supabase, user.id, 'user', text)
-    .then(() => saveChatMessage(supabase, user.id, 'assistant', assistantText))
-    .catch(() => {});
+
+  // 返答前にユーザー/アシスタントメッセージをDB保存（連投時の履歴欠落を防ぐ）
+  // 2件を並列で保存 → 遅延は1回分のDBラウンドトリップ程度
+  await Promise.all([
+    saveChatMessage(supabase, user.id, 'user', text).catch(err =>
+      console.error('[handleFreeText] save user message failed', err)),
+    saveChatMessage(supabase, user.id, 'assistant', assistantText).catch(err =>
+      console.error('[handleFreeText] save assistant message failed', err)),
+  ]);
+
+  // 返答送信
+  await replyMessage(env, event.replyToken, responses.map(r => textMessage(r)));
 
   // 会話から新しいユーザー情報を抽出して保存（非同期）
   const allHistory = [...chatHistory, { role: 'user' as const, content: text }, { role: 'assistant' as const, content: assistantText }];
